@@ -51,9 +51,10 @@
     # protocol version), and as the `ringmaster` binary whose store path is
     # burned into juggler (main.RingmasterPath).
     #
-    # S7 flag-day branch (ringmaster 2dd17cf): the store is private behind a host
-    # service socket and ProtocolVersion is 4. Branch-only until ringmaster lands
-    # S7 on master; then this goes back to master.tar.gz.
+    # S7 flag-day branch (the lock holds the rev): the store is private behind a
+    # host service socket and ProtocolVersion is 4. Branch-only: the last commit
+    # before this lands restores this URL AND troupe's to master.tar.gz and
+    # re-locks, once ringmaster master has S7.
     ringmaster.url = "https://code.linenisgreat.com/ringmaster/archive/s7-flag-day.tar.gz";
     ringmaster.inputs.igloo.follows = "igloo";
     ringmaster.inputs.nixpkgs-master.follows = "nixpkgs";
