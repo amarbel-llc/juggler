@@ -128,49 +128,6 @@
         "type": "github"
       }
     },
-    "clown": {
-      "inputs": {
-        "bats": [
-          "just-us",
-          "bats"
-        ],
-        "conformist": [
-          "just-us",
-          "conformist"
-        ],
-        "igloo": [
-          "just-us",
-          "igloo"
-        ],
-        "llm-agents": "llm-agents",
-        "nixpkgs-claude-code": "nixpkgs-claude-code",
-        "nixpkgs-codex": "nixpkgs-codex",
-        "nixpkgs-llama": "nixpkgs-llama",
-        "nixpkgs-master": [
-          "just-us",
-          "nixpkgs-master"
-        ],
-        "purse-first": "purse-first",
-        "ringmaster": "ringmaster",
-        "tommy": "tommy",
-        "troupe": "troupe",
-        "utils": [
-          "just-us",
-          "flake-utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792152436,
-        "narHash": "sha256-zLWmeu3j5Tn54v3RPXbRJhbUvmTsGKVFm/iKerHd/oI=",
-        "rev": "2d387380217f0b81a03469e84fda4310016526e9",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/clown/archive/2d387380217f0b81a03469e84fda4310016526e9.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/clown/archive/master.tar.gz"
-      }
-    },
     "conformist": {
       "inputs": {
         "igloo": [
@@ -192,21 +149,6 @@
       }
     },
     "crane": {
-      "locked": {
-        "lastModified": 1791754810,
-        "narHash": "sha256-cN0Mgk+sQtCJcGWs9H4M0CnLRAuC4I8aCwiBTcBJs6E=",
-        "owner": "ipetkov",
-        "repo": "crane",
-        "rev": "bd63bf1d0a0f6dcacd7549c714a671ee63b0db6a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ipetkov",
-        "repo": "crane",
-        "type": "github"
-      }
-    },
-    "crane_2": {
       "locked": {
         "lastModified": 1791754810,
         "narHash": "sha256-cN0Mgk+sQtCJcGWs9H4M0CnLRAuC4I8aCwiBTcBJs6E=",
@@ -268,13 +210,13 @@
       "inputs": {
         "flake-utils": [
           "just-us",
-          "clown",
+          "ringmaster",
           "purse-first",
           "utils"
         ],
         "nixpkgs-master": [
           "just-us",
-          "clown",
+          "ringmaster",
           "purse-first",
           "nixpkgs-master"
         ]
@@ -393,7 +335,6 @@
     "just-us": {
       "inputs": {
         "bats": "bats_2",
-        "clown": "clown",
         "conformist": [
           "conformist"
         ],
@@ -404,129 +345,24 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "nixpkgs-master": "nixpkgs-master_2"
+        "nixpkgs-master": "nixpkgs-master_2",
+        "ringmaster": "ringmaster"
       },
       "locked": {
-        "lastModified": 1792152978,
-        "narHash": "sha256-icP075bdMTMoY0bweIlJ0CMDKVf2AAFXfhaT1svKpdA=",
+        "lastModified": 1792532592,
+        "narHash": "sha256-21Cu1Hr34ZyRq5Z4bSehDB2JnGTBeZFKWr85mBX0j3w=",
         "ref": "refs/heads/master",
-        "rev": "2fd3c6e72aa42b9d1c6ee004e7e18e9553e9a4fa",
-        "revCount": 1767,
+        "rev": "45b97898c17973fc0228350255ff8389396999f0",
+        "revCount": 1768,
         "type": "git",
         "url": "https://code.linenisgreat.com/just-us.git"
       },
       "original": {
         "type": "git",
         "url": "https://code.linenisgreat.com/just-us.git"
-      }
-    },
-    "llm-agents": {
-      "inputs": {
-        "bun2nix": [
-          "just-us",
-          "clown",
-          "igloo",
-          "bun2nix"
-        ],
-        "flake-parts": [
-          "just-us",
-          "clown",
-          "igloo",
-          "flake-parts"
-        ],
-        "nixpkgs": "nixpkgs",
-        "systems": [
-          "just-us",
-          "clown",
-          "igloo",
-          "systems"
-        ],
-        "treefmt-nix": [
-          "just-us",
-          "clown",
-          "igloo",
-          "treefmt-nix"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792149628,
-        "narHash": "sha256-z6OJhOCXlLXdP1GdqS+6wLe/blU6KGZFrib+b/nxYE8=",
-        "owner": "numtide",
-        "repo": "llm-agents.nix",
-        "rev": "e85b99217baf13a38fc887b31338b1833f1159c0",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "llm-agents.nix",
-        "type": "github"
-      }
-    },
-    "nixpkgs": {
-      "locked": {
-        "lastModified": 1791966044,
-        "narHash": "sha256-t1hT8UW97rFCWCJO7/pClvu0AhLN5V3uir2M0ic4w/Q=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "319e4cebef10cbb636c6ea392137b52ad105336a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixpkgs-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-claude-code": {
-      "locked": {
-        "lastModified": 1776358155,
-        "narHash": "sha256-ruPV/Nk84idlHqrJH4JTWlqspw627PgcwLaYH6MiumQ=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "b2b9662ffe1e9a5702e7bfbd983595dd56147dbf",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "b2b9662ffe1e9a5702e7bfbd983595dd56147dbf",
-        "type": "github"
-      }
-    },
-    "nixpkgs-codex": {
-      "locked": {
-        "lastModified": 1777061873,
-        "narHash": "sha256-+NL0GnHsDCuMP1AcCeOe97D8O95IhNKrmy3+vk60rFE=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "0de8465d2b54ddd962422706d932c3354b4237ec",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "0de8465d2b54ddd962422706d932c3354b4237ec",
-        "type": "github"
       }
     },
     "nixpkgs-llama": {
-      "locked": {
-        "lastModified": 1777542320,
-        "narHash": "sha256-YxWL74qPnCqk2byk7QAAmlnAm8+rtOzGZHmRXl1Lpys=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "c0df0d088ab33122b402ea31cb5f7e1df7536036",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "c0df0d088ab33122b402ea31cb5f7e1df7536036",
-        "type": "github"
-      }
-    },
-    "nixpkgs-llama_2": {
       "locked": {
         "lastModified": 1777542320,
         "narHash": "sha256-YxWL74qPnCqk2byk7QAAmlnAm8+rtOzGZHmRXl1Lpys=",
@@ -578,23 +414,23 @@
       "inputs": {
         "conformist": [
           "just-us",
-          "clown",
+          "ringmaster",
           "conformist"
         ],
         "gomod2nix": "gomod2nix",
         "igloo": [
           "just-us",
-          "clown",
+          "ringmaster",
           "igloo"
         ],
         "nixpkgs-master": [
           "just-us",
-          "clown",
+          "ringmaster",
           "nixpkgs-master"
         ],
         "utils": [
           "just-us",
-          "clown",
+          "ringmaster",
           "utils"
         ]
       },
@@ -685,41 +521,32 @@
       "inputs": {
         "bats": [
           "just-us",
-          "clown",
           "bats"
         ],
         "conformist": [
           "just-us",
-          "clown",
           "conformist"
         ],
         "igloo": [
           "just-us",
-          "clown",
           "igloo"
         ],
         "nixpkgs-master": [
           "just-us",
-          "clown",
           "nixpkgs-master"
         ],
-        "purse-first": [
-          "just-us",
-          "clown",
-          "purse-first"
-        ],
+        "purse-first": "purse-first",
         "utils": [
           "just-us",
-          "clown",
-          "utils"
+          "flake-utils"
         ]
       },
       "locked": {
-        "lastModified": 1792150559,
-        "narHash": "sha256-QqePzARIOIjwjWdXa++rAktehcVya+JBTA/b6DDiZi0=",
-        "rev": "b36b2d5820a8357f76dd234cf67d13c28bc89a6c",
+        "lastModified": 1792532099,
+        "narHash": "sha256-P6z2rBP2Kk9/cMZp89g24gJWrSflcNK26FKSq+gcXDU=",
+        "rev": "02106d11d2747890b3aa883dc4a9b89ac0d4a051",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/ringmaster/archive/b36b2d5820a8357f76dd234cf67d13c28bc89a6c.tar.gz"
+        "url": "https://code.linenisgreat.com/ringmaster/archive/02106d11d2747890b3aa883dc4a9b89ac0d4a051.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -767,10 +594,10 @@
           "conformist",
           "nixpkgs-master"
         ],
-        "nixpkgs-llama": "nixpkgs-llama_2",
+        "nixpkgs-llama": "nixpkgs-llama",
         "ringmaster": "ringmaster_2",
-        "tommy": "tommy_2",
-        "troupe": "troupe_2",
+        "tommy": "tommy",
+        "troupe": "troupe",
         "utils": [
           "conformist",
           "utils"
@@ -778,30 +605,6 @@
       }
     },
     "rust-overlay": {
-      "inputs": {
-        "nixpkgs": [
-          "just-us",
-          "clown",
-          "tommy",
-          "tap",
-          "igloo"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792133817,
-        "narHash": "sha256-LivT78KkZ18adR5daoXj2nlIOxuLw6B96nvW4FOl4d0=",
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "rev": "ec07af44be2e0ce4e1a17e00a97d44232607c1ec",
-        "type": "github"
-      },
-      "original": {
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "rust-overlay_2": {
       "inputs": {
         "nixpkgs": [
           "tommy",
@@ -841,69 +644,10 @@
     "tap": {
       "inputs": {
         "bats": [
-          "just-us",
-          "clown",
           "tommy",
           "bats"
         ],
         "crane": "crane",
-        "gomod2nix": [
-          "just-us",
-          "clown",
-          "purse-first",
-          "gomod2nix"
-        ],
-        "igloo": [
-          "just-us",
-          "clown",
-          "tommy",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "just-us",
-          "clown",
-          "tommy",
-          "nixpkgs-master"
-        ],
-        "purse-first": [
-          "just-us",
-          "clown",
-          "purse-first"
-        ],
-        "rust-overlay": "rust-overlay",
-        "treefmt-nix": [
-          "just-us",
-          "clown",
-          "tommy",
-          "igloo",
-          "treefmt-nix"
-        ],
-        "utils": [
-          "just-us",
-          "clown",
-          "tommy",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792150344,
-        "narHash": "sha256-Wi12xySVP+1dL3RJLvLM639KohjZqJKFdn8jueKoOFM=",
-        "rev": "b56cb649b05cb631c73a483bfb9eae960533d4f4",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/tap/archive/b56cb649b05cb631c73a483bfb9eae960533d4f4.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/tap/archive/master.tar.gz"
-      }
-    },
-    "tap_2": {
-      "inputs": {
-        "bats": [
-          "tommy",
-          "bats"
-        ],
-        "crane": "crane_2",
         "gomod2nix": "gomod2nix_3",
         "igloo": [
           "tommy",
@@ -914,7 +658,7 @@
           "nixpkgs-master"
         ],
         "purse-first": "purse-first_3",
-        "rust-overlay": "rust-overlay_2",
+        "rust-overlay": "rust-overlay",
         "treefmt-nix": [
           "tommy",
           "igloo",
@@ -940,47 +684,6 @@
     "tommy": {
       "inputs": {
         "bats": [
-          "just-us",
-          "clown",
-          "bats"
-        ],
-        "conformist": [
-          "just-us",
-          "clown",
-          "conformist"
-        ],
-        "igloo": [
-          "just-us",
-          "clown",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "just-us",
-          "clown",
-          "nixpkgs-master"
-        ],
-        "tap": "tap",
-        "utils": [
-          "just-us",
-          "clown",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792150731,
-        "narHash": "sha256-Vaa/JhNZ0Vo+vBie8cXstmDuL6G5xbj7Nvu8HXku3yY=",
-        "rev": "7bfc69706a1922f7b8396f55959a9b486a83e0a6",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/tommy/archive/7bfc69706a1922f7b8396f55959a9b486a83e0a6.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/tommy/archive/master.tar.gz"
-      }
-    },
-    "tommy_2": {
-      "inputs": {
-        "bats": [
           "bats"
         ],
         "conformist": [
@@ -992,7 +695,7 @@
         "nixpkgs-master": [
           "nixpkgs"
         ],
-        "tap": "tap_2",
+        "tap": "tap",
         "utils": [
           "utils"
         ]
@@ -1053,54 +756,6 @@
       }
     },
     "troupe": {
-      "inputs": {
-        "bats": [
-          "just-us",
-          "clown",
-          "troupe",
-          "ringmaster",
-          "bats"
-        ],
-        "nixpkgs": [
-          "just-us",
-          "clown",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "just-us",
-          "clown",
-          "nixpkgs-master"
-        ],
-        "ringmaster": [
-          "just-us",
-          "clown",
-          "ringmaster"
-        ],
-        "treefmt-nix": [
-          "just-us",
-          "clown",
-          "igloo",
-          "treefmt-nix"
-        ],
-        "utils": [
-          "just-us",
-          "clown",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792151078,
-        "narHash": "sha256-surbDFQ5BYRSd7H3aGmW6SPq9AuYkQwuUv/TmHCCH9Q=",
-        "rev": "81b17a6558dc72c6b254e8e6391760459929e0db",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/troupe/archive/81b17a6558dc72c6b254e8e6391760459929e0db.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/troupe/archive/master.tar.gz"
-      }
-    },
-    "troupe_2": {
       "inputs": {
         "bats": [
           "troupe",
