@@ -274,23 +274,41 @@
         # package's test binary is built and run in its own CA derivation.
         # testEnv hands the launcher tests a prebuilt llama-server stand-in
         # (a per-package test run has no `go` to build it).
-        jugglerGodynTests = pkgs.buildGodynModule {
-          pname = "juggler";
-          version = jugglerVersion;
-          src = goSrc;
-          manifest = ./go.nix;
-          inherit inputs;
-          cc = pkgs.stdenv.cc;
-          tests = true;
-          testEnv = {
-            CLOWN_TEST_FAKE_LLAMA_SERVER = "${fake-llama-server-go}/bin/fake-llama-server";
-          };
+        mkJugglerGodynTests =
+          extra:
+          pkgs.buildGodynModule (
+            {
+              pname = "juggler";
+              version = jugglerVersion;
+              src = goSrc;
+              manifest = ./go.nix;
+              inherit inputs;
+              cc = pkgs.stdenv.cc;
+              tests = true;
+              testEnv = {
+                CLOWN_TEST_FAKE_LLAMA_SERVER = "${fake-llama-server-go}/bin/fake-llama-server";
+              };
+            }
+            // extra
+          );
+        jugglerGodynTests = mkJugglerGodynTests { };
+
+        # The same per-package lane under -race (igloo#34): a race-instrumented
+        # stdlib, a `go list -race` graph, and -race on every compile and link,
+        # so a detected data race fails the run. `cc` above is required (race
+        # needs cgo).
+        jugglerGodynRaceTests = mkJugglerGodynTests {
+          pname = "juggler-race";
+          race = true;
         };
 
         # Exposed only where buildGoAuto's default picks godyn (igloo's
         # godynSystems); elsewhere the check falls back to building juggler.
-        goTests =
-          if juggler-go.passthru.backend == "native" then jugglerGodynTests.passthru.checkAll else juggler-go;
+        onGodyn = juggler-go.passthru.backend == "native";
+        goTests = if onGodyn then jugglerGodynTests.passthru.checkAll else juggler-go;
+        godynRaceOutputs = lib.optionalAttrs onGodyn {
+          juggler-godyn-race-tests = jugglerGodynRaceTests.passthru.checkAll;
+        };
 
         # Public Go packages for other fleet modules (igloo RFC-0001 go-pkgs
         # producer convention): pkgs/juggler, the dagnabit-generated facade over
@@ -459,7 +477,9 @@
           conformist-repair = eval.config.build.repair;
           conformist-impure-config = impureEval.config.build.configFile;
         }
-        // batsLaneOutputs;
+        // batsLaneOutputs
+        # The -race variant of the test lane, under packages (`just test-go-race`).
+        // godynRaceOutputs;
 
         # What a consumer builds on top of: lib.<system>.mkJugglerGo { moxyPath }
         # gives a juggler with the consumer's moxy burned in (clown#258 plan,

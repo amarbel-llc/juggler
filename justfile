@@ -114,10 +114,10 @@ codemod-layout: codemod-layout-internal
 # godyn-go (dagnabit type-loads through the go.mod rendered from go.nix; the
 # checkout has none), which patches the result back. dagnabit moves with `git
 # mv`, so the sandbox copy gets a throwaway repo, removed again so it stays out of
-# the patch. Gotchas, all from godyn-go: it rewrites go.nix from the resolution
-# (run `git checkout go.nix` unless a dependency change is intended); the trailing
-# ingest cannot see moved files until they are staged, so `git add -A` after the
-# run; and dagnabit does not follow imports under testdata/ (fix by hand).
+# the patch. Gotchas: godyn-go ingests the post-run resolution into go.nix, a no-op
+# while go.nix is already resolved (it is) but a rewrite after a dependency change;
+# the trailing ingest cannot see moved files until they are staged, so `git add -A`
+# after the run; and dagnabit does not follow imports under testdata/ (fix by hand).
 #
 # reposition internal/ packages by dependency depth
 codemod-layout-internal:
@@ -128,8 +128,7 @@ codemod-facade: codemod-facade-export
 # Regenerates pkgs/<leaf> from the `//go:generate dagnabit export` directives in
 # internal/, through godyn-go with the flake's dagnabitPinned (facade-format pass
 # pinned to the dagnabit-facade config). Run after changing an exported symbol or
-# bumping purse-first (the header stamps dagnabit's version). Same go.nix gotcha
-# as codemod-layout.
+# bumping purse-first (the header stamps dagnabit's version).
 #
 # regenerate the dagnabit pkgs/ facade
 codemod-facade-export:
@@ -150,6 +149,30 @@ codemod-fmt-tree:
 [group('debug')]
 debug-plan-layout:
     nix run --inputs-from . igloo#godyn-go -- -- sh -c 'git init -q && git add -A && dagnabit -n -v internal; rm -rf .git'
+
+# The per-package lane under -race (a race-instrumented stdlib and -race on every
+# compile and link), so a detected data race fails the run. Godyn systems only
+# (packages.juggler-godyn-race-tests). Opt-in, outside `just test` (as in clown),
+# and currently RED: 5 tests in internal/charlie/jugglerrun die with "ringmaster
+# ...: signal: killed" from the fake ringmaster, deterministically, with no data
+# race reported. Cause not yet found; this is the repro.
+#
+# run the Go unit tests per package under -race (currently failing)
+[group('debug')]
+debug-test-go-race:
+    nix build '.#juggler-godyn-race-tests' --no-link --print-build-logs
+
+# Runs godyn-go against a scratch copy of go.nix (-m) so the real manifest cannot
+# be rewritten: godyn-go ingests the post-run resolution into whatever -m names.
+# Use it to see what a dependency resolution would change before adopting it.
+# Output: .tmp/scratch-go.nix, diffed against go.nix.
+#
+# run godyn-go with a scratch manifest instead of go.nix
+[group('debug')]
+debug-godyn-go-scratch:
+    cp go.nix .tmp/scratch-go.nix
+    nix run --inputs-from . igloo#godyn-go -- -m .tmp/scratch-go.nix -- go generate -run dagnabit ./...
+    diff go.nix .tmp/scratch-go.nix || true
 
 # One-shot after the NATO relayout: comments, man pages and the FDR named
 # packages as internal/<leaf>; levels move, so name them internal/*/<leaf> (the

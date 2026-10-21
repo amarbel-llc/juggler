@@ -33,8 +33,17 @@ No ambient `go`, no `go.mod`: dependencies live in `go.nix` (godyn,
 `godyn(7)`). Use the justfile: `just` runs lint, build and test (the
 pre-merge gate). `just test-go` is the per-package godyn lane, `just
 test-bats` the sandboxed bats lane. Go tools that need a module (dagnabit,
-`go generate`) run through godyn-go; it rewrites `go.nix` from its resolution, so
-`git checkout go.nix` afterwards unless a dependency change is intended.
+`go generate`) run through godyn-go, which ingests the post-run resolution into
+`go.nix` (godyn(7)); that is by design and a no-op while `go.nix` is resolved, so
+`git diff go.nix` after a run is a dependency signal, not noise. To preview a
+resolution without touching it, `just debug-godyn-go-scratch`.
+
+`just debug-test-go-race` is the `-race` lane (godyn systems). It is opt-in and
+currently red: 5 tests in `internal/charlie/jugglerrun` (parent-cancel, SIGTERM
+past the deadline, the three ExitWake done/read retries) die with `ringmaster
+...: signal: killed` from the fake ringmaster (an `sh` script that re-execs the
+race-instrumented test binary); no data race is reported and the cause is not
+yet found.
 
 ## Boundaries
 
