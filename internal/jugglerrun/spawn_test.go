@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 const testIssuer = "pebble-webhook"

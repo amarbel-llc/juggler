@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 const anthropicListReposReply = `{"content":[{"type":"tool_use","id":"tu_0","name":"list_repos","input":{}}],"stop_reason":"tool_use"}`

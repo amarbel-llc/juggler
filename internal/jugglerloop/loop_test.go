@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // scriptedModel is an httptest model endpoint that answers request N with

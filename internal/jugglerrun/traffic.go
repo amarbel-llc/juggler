@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // trafficSink appends one JSON line per jugglerloop.TrafficRecord to an open

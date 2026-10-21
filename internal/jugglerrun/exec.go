@@ -21,7 +21,7 @@ import (
 	"sort"
 	"strings"
 
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
 )
 
 // Environment overrides for the consumed binaries and the moxy upstream.

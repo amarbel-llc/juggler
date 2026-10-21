@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 func TestRunAgent_EndToEndSucceeded(t *testing.T) {

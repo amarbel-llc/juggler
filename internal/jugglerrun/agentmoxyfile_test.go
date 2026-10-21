@@ -8,7 +8,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
 )
 
 // fakeResolveMoxyCLI implements only ResolveToolName (a static rendered ->

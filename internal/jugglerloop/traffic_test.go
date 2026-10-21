@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // TestRun_OnTrafficOneRecordPerToolCall covers clown#255's core ask: one

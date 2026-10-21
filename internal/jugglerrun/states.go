@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // Ringmaster terminal states (FDR 0019 §6) and the derived running state.

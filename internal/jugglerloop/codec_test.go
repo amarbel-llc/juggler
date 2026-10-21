@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 const agent = "agent-1"

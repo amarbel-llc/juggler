@@ -14,10 +14,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
-	"code.linenisgreat.com/clown/internal/jugglereval"
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglereval"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 	"code.linenisgreat.com/ringmaster/pkgs/jobwake"
 )
 

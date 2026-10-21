@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	jd "code.linenisgreat.com/clown/internal/jugglerdecide"
-	jr "code.linenisgreat.com/clown/internal/jugglerrun"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	jd "code.linenisgreat.com/juggler/internal/jugglerdecide"
+	jr "code.linenisgreat.com/juggler/internal/jugglerrun"
 )
 
 const decideUsage = "usage: juggler decide --model <name> --room <muc-jid> --parent <stanza-id> [--min-confidence 0.5] [--question <id>] [--run-key <key>] [--troupe <path>]  (payload {\"state\",\"questions\"} on stdin)"

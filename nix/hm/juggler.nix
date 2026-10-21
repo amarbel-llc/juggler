@@ -1,6 +1,6 @@
-# home-manager module for `programs.juggler` — see FDR-0010 /
-# docs/plans/2026-05-18-ringmaster-control-plane.md (the daemon later moved
-# from ringmaster into `juggler daemon`).
+# home-manager module for `programs.juggler` — see FDR-0010 and
+# docs/plans/2026-05-18-ringmaster-control-plane.md in the clown repo (the
+# daemon later moved from ringmaster into `juggler daemon`).
 #
 # Single-instance only. The daemon binds one Unix domain socket at
 # $HOME/.local/state/juggler/control.sock and tracks the running
@@ -23,10 +23,9 @@ let
   cfg = config.programs.juggler;
 
   # The llama-server control-plane daemon, invoked as `juggler daemon`. The
-  # daemon stays clown-side; the job platform it once shared a binary with was
-  # extracted into the standalone code.linenisgreat.com/ringmaster module.
-  # Wire `package` to a clown output carrying `bin/juggler` (e.g.
-  # clown.packages.<system>.juggler).
+  # job platform it once shared a binary with was extracted into the
+  # standalone code.linenisgreat.com/ringmaster module. Wire `package` to an
+  # output carrying `bin/juggler` (e.g. juggler.packages.<system>.default).
   binPath = "${cfg.package}/bin/juggler";
 
   # Single launcher script used by both systemd and launchd. Resolves
@@ -54,8 +53,8 @@ in
       type = types.package;
       description = ''
         The package providing the `juggler` binary whose `daemon` verb runs
-        the llama-server control plane. The clown flake exposes one as
-        `packages.<system>.juggler`.
+        the llama-server control plane. The juggler flake exposes one as
+        `packages.<system>.default`.
       '';
     };
   };
@@ -66,7 +65,7 @@ in
     systemd.user.services.juggler = mkIf pkgs.stdenv.hostPlatform.isLinux {
       Unit = {
         Description = "Juggler (llama-server control plane)";
-        Documentation = "https://code.linenisgreat.com/clown";
+        Documentation = "https://code.linenisgreat.com/juggler";
       };
       Service = {
         ExecStart = "${launcher}";

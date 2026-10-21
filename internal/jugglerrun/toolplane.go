@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
-	"code.linenisgreat.com/clown/internal/jugglertools"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglertools"
 )
 
 // ConnectMoxy initializes the MCP session with the moxy upstream at url and

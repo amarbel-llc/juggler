@@ -16,7 +16,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"code.linenisgreat.com/clown/internal/jugglereval"
+	"code.linenisgreat.com/juggler/internal/jugglereval"
 )
 
 const (

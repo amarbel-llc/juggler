@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // buildFakeLlamaServer compiles cmd/juggler/testdata/fake-llama-server

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // TestCmdModelListFormatsUnion exercises cmdModelList's populated-table

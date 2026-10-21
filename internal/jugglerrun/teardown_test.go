@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
-	"code.linenisgreat.com/clown/internal/jugglerrun/jugglerruntest"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerrun/jugglerruntest"
 )
 
 const (

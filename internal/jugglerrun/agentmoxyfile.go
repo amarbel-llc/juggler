@@ -10,8 +10,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // ErrToolResolution is a brief refusal (clown#261 point 3): moxy's own

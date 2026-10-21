@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // AnthropicCodec speaks the Anthropic Messages API (local llama-server or a

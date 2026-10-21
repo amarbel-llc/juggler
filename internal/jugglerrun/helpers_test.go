@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
-	"code.linenisgreat.com/clown/internal/jugglerrun/jugglerruntest"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglerrun/jugglerruntest"
 )
 
 func TestMain(m *testing.M) {

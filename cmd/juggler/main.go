@@ -11,8 +11,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	jr "code.linenisgreat.com/clown/internal/jugglerrun"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	jr "code.linenisgreat.com/juggler/internal/jugglerrun"
 )
 
 func main() {
@@ -47,10 +47,9 @@ func run(args []string) int {
 		return cmdHandles(args[1:], os.Stdout, os.Stderr)
 	case "daemon":
 		// The llama-server control-plane daemon (FDR-0010). Runs the
-		// server the other verbs dial via withClient. The daemon stays
-		// clown-side; the job platform it once shared a binary with was
-		// extracted into the standalone code.linenisgreat.com/ringmaster
-		// module.
+		// server the other verbs dial via withClient. The job platform it
+		// once shared a binary with was extracted into the standalone
+		// code.linenisgreat.com/ringmaster module.
 		return runDaemon(args[1:])
 	case "start":
 		return withClient(func(cli *rm.Client) int { return cmdStart(cli, args[1:]) })

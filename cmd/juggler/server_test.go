@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	"code.linenisgreat.com/clown/internal/jugglermodels"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	"code.linenisgreat.com/juggler/internal/jugglermodels"
 )
 
 // mustJSON marshals v for use as an rm.Envelope's Params field in tests

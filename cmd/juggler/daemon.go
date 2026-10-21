@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"syscall"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
-	"code.linenisgreat.com/clown/internal/jugglermodels"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
+	"code.linenisgreat.com/juggler/internal/jugglermodels"
 )
 
 // runDaemon runs the llama-server control-plane daemon (FDR-0010), invoked as
-// `juggler daemon`. The daemon stays clown-side; the job platform it once
-// shared a binary with (jobwake + jobmcp) was extracted into the standalone
+// `juggler daemon`. The job platform it once shared a binary with (jobwake
+// + jobmcp) was extracted into the standalone
 // code.linenisgreat.com/ringmaster module. args are the arguments following
 // the `daemon` subcommand.
 func runDaemon(args []string) int {

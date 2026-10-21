@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 func readTrafficLines(t *testing.T, path string) []jugglerloop.TrafficRecord {

@@ -9,7 +9,8 @@
   programs.nixfmt.enable = true;
 
   # eng-versioning(7) derives the version key from go.mod / go.nix / Cargo.toml;
-  # there is no go.nix yet, so set it explicitly to match version.env.
+  # go.nix names no key (go.mod is rendered inside nix), so set it explicitly;
+  # it must match version.env.
   linters.eng-versioning.key = "JUGGLER_VERSION";
 
   # Prose and generated files are out of scope for code formatters.

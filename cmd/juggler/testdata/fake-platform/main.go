@@ -40,7 +40,7 @@ import (
 	"strings"
 	"syscall"
 
-	"code.linenisgreat.com/clown/internal/jugglerrun/jugglerruntest"
+	"code.linenisgreat.com/juggler/internal/jugglerrun/jugglerruntest"
 )
 
 func main() {

@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	rm "code.linenisgreat.com/clown/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/juggler"
 )
 
 // ToolSpec is one tool offered to the model. Kind is the artifact kind the

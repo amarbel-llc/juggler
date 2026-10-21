@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerbrief"
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerbrief"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // cleanupTimeout bounds the undo of a failed spawn.

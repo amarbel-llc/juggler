@@ -35,7 +35,7 @@ import (
 	"sync"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // Client satisfies the loop's executor directly; its error taxonomy is the

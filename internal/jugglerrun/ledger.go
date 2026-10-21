@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"code.linenisgreat.com/clown/internal/jugglerdecide"
-	"code.linenisgreat.com/clown/internal/jugglerloop"
+	"code.linenisgreat.com/juggler/internal/jugglerdecide"
+	"code.linenisgreat.com/juggler/internal/jugglerloop"
 )
 
 // RunLedgerSchema is the version carried by every RunLedger.
