@@ -354,6 +354,8 @@
         eval = conformist.lib.evalModule pkgs {
           imports = [
             conformist.lib.presets.eng
+            # The canonical Go formatter chain: goimports, then gofumpt.
+            conformist.lib.presets.eng-go
             # The justfile-convention linters ship from just-us, NOT conformist.
             # They read `just --dump --dump-format model` (and, for the
             # orphaned-summary rule, `doc_prelude`) — fork-only parser data — so
