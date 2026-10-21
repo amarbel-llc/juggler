@@ -1,9 +1,6 @@
 # go.nix — this module's dependencies (FDR 0008); go.mod, gomod2nix.toml and
 # the package graph are rendered or derived from it inside nix. Edit through
 # the escape hatch (godyn-go) or by hand.
-#
-# Carried over from clown's go.nix at the extraction (clown#258), minus what
-# only clown uses (charmbracelet/huh and its indirects, purse-first's dewey).
 {
   flakeInputs = {
     "code.linenisgreat.com/ringmaster" = {
@@ -78,6 +75,18 @@
       indirect = true;
       version = "v0.2.1";
     };
+    "github.com/clipperhouse/stringish" = {
+      go = "1.18";
+      hash = "sha256-Mp8M1CRbwr6dcJ4BD9tXD5I78ZgCFEm0GDxJv0GYReg=";
+      indirect = true;
+      version = "v0.1.1";
+    };
+    "github.com/clipperhouse/uax29/v2" = {
+      go = "1.18";
+      hash = "sha256-dLL70mEOxrmYVoQjy2K7QvZiahAlJKOcFDz2mW/R/Do=";
+      indirect = true;
+      version = "v2.3.0";
+    };
     "github.com/erikgeiser/coninput" = {
       go = "1.16";
       hash = "sha256-OWSqN1+IoL73rWXWdbbcahZu8n2al90Y3eT5Z0vgHvU=";
@@ -113,10 +122,10 @@
       version = "v0.0.1";
     };
     "github.com/mattn/go-runewidth" = {
-      go = "1.9";
-      hash = "sha256-NC+ntvwIpqDNmXb7aixcg09il80ygq6JAnW0Gb5b/DQ=";
+      go = "1.20";
+      hash = "sha256-GpnbKplhX410Q/eIdknvWbYZgdav1keN+7wNUeOSMHE=";
       indirect = true;
-      version = "v0.0.16";
+      version = "v0.0.19";
     };
     "github.com/muesli/ansi" = {
       go = "1.17";
@@ -154,10 +163,10 @@
       version = "v0.0.0-20220910002029-abceb7e1c41e";
     };
     "golang.org/x/sync" = {
-      go = "1.23.0";
-      hash = "sha256-Jf4ehm8H8YAWY6mM151RI5CbG7JcOFtmN0AZx4bE3UE=";
+      go = "1.25.0";
+      hash = "sha256-ybcjhCfK6lroUM0yswUvWooW8MOQZBXyiSqoxG6Uy0Y=";
       indirect = true;
-      version = "v0.15.0";
+      version = "v0.20.0";
     };
     "golang.org/x/sys" = {
       go = "1.25.0";
