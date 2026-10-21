@@ -7,6 +7,7 @@
     # nixpkgs-master/utils pins keeps this flake's closure shared with conformist's.
     conformist.url = "https://code.linenisgreat.com/conformist/archive/master.tar.gz";
     conformist.inputs.igloo.follows = "igloo";
+    conformist.inputs.nixpkgs-master.follows = "nixpkgs-master";
     nixpkgs.follows = "conformist/nixpkgs-master";
     utils.follows = "conformist/utils";
 
@@ -24,10 +25,14 @@
     # flake-utils / conformist inputs follow this flake's so the closure stays
     # shared; its `bats` input deliberately keeps its own pin (see just-us's
     # flake.nix) and is unused here.
-    just-us.url = "git+https://code.linenisgreat.com/just-us.git";
+    just-us.url = "https://code.linenisgreat.com/just-us/archive/master.tar.gz";
     just-us.inputs.nixpkgs.follows = "nixpkgs";
     just-us.inputs.flake-utils.follows = "utils";
     just-us.inputs.conformist.follows = "conformist";
+    just-us.inputs.bats.follows = "bats";
+    just-us.inputs.igloo.follows = "igloo";
+    just-us.inputs.nixpkgs-master.follows = "nixpkgs-master";
+    just-us.inputs.ringmaster.follows = "ringmaster";
 
     # amarbel-llc/bats: the batsLane build helper and the bats-libs bundle
     # (bats-support, bats-assert, bats-emo, bats-island).
@@ -66,6 +71,8 @@
     tommy.inputs.utils.follows = "utils";
     tommy.inputs.bats.follows = "bats";
     tommy.inputs.conformist.follows = "conformist";
+    tommy.inputs.tap.inputs.purse-first.follows = "purse-first";
+    tommy.inputs.tap.inputs.gomod2nix.follows = "purse-first/gomod2nix";
 
     # troupe: BINARY-only (main.TroupePath); juggler does not import its Go.
     troupe.url = "https://code.linenisgreat.com/troupe/archive/master.tar.gz";
@@ -83,6 +90,7 @@
     # NOTE: moxy is deliberately NOT an input. moxy's flake pins clown, and
     # clown will pin juggler, so taking moxy here would make the repos pin each
     # other. main.MoxyPath is burned in by the consumer instead (lib.mkJugglerGo).
+    nixpkgs-master.url = "github:NixOS/nixpkgs/b4fd65b198c599cbe814fcb9f42d25d021595ec9";
   };
 
   outputs =
