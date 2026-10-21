@@ -1396,9 +1396,14 @@ The router, before any subagent exists:
   the run-level job `spawn --new-run` starts, and the `Start` calls
   `spawn --brief` makes on a child's behalf before the unit exists, hold
   no lock of their own.
-- **ringmaster must speak exactly protocol 3** (not "3 or later": a
-  future protocol 4 is refused too) for the liveness reaper, its exit 3
-  (`jobwake.ErrAlreadyTerminal`), and `ringmaster version --protocol`;
+- **ringmaster must speak exactly protocol 4** (not "4 or later": a
+  future protocol 5 is refused too) for the host service (S7: the store
+  is private to `ringmaster serve`, and the dead-producer reaping the
+  earlier text of this FDR describes as `ringmaster monitor` /
+  `ringmaster reap` is the service's own job; `reap` is retired), its
+  exit 3 (`jobwake.ErrAlreadyTerminal`), and
+  `ringmaster version --protocol` (protocol 3 was the pre-S7 file-store
+  contract);
   `juggler` exact-matches the installed `ringmaster`'s reported protocol
   integer against the `jobwake.ProtocolVersion` it was built against
   (clown#256), refusing loudly on any mismatch (both versions named)

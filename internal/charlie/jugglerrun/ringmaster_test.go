@@ -3,6 +3,7 @@ package jugglerrun
 import (
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestCheckRingmasterProtocol_MismatchRefuses(t *testing.T) {
 	h := newHarness(t)
 	h.fakes.SetRingmasterProtocolVersion(t, "2")
 	err := CheckRingmasterProtocol(context.Background(), h.fakes.Ringmaster)
-	if err == nil || !strings.Contains(err.Error(), "protocol 2") || !strings.Contains(err.Error(), "protocol 3") {
+	if err == nil || !strings.Contains(err.Error(), "protocol 2") || !strings.Contains(err.Error(), "protocol 4") {
 		t.Fatalf("err = %v", err)
 	}
 }
@@ -39,31 +40,39 @@ func TestCheckRingmasterProtocol_MissingBinaryRefuses(t *testing.T) {
 	}
 }
 
+// startServiceForTest runs ringmaster's host service in this process (S7,
+// RFC-0020 §7.3: jobwake.StartService) over a fresh store and a SHORT runtime
+// directory (a unix socket path is limited to ~108 bytes, and t.TempDir() under
+// a nix build sandbox is longer than that), and returns when it is accepting.
+func startServiceForTest(t *testing.T) {
+	t.Helper()
+	t.Setenv("XDG_STATE_HOME", t.TempDir())
+	runtimeDir, err := os.MkdirTemp("/tmp", "jr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(runtimeDir) })
+	t.Setenv("XDG_RUNTIME_DIR", runtimeDir)
+	stop, err := jobwake.StartService(nil)
+	if err != nil {
+		t.Fatalf("StartService: %v", err)
+	}
+	t.Cleanup(stop)
+}
+
 // TestJobwakeAcquireJobLock_AliveWhileHeldGoneAfterRelease is clown#256's
 // finding 6 lock-identity test, at the jobwake level rather than through
-// `ringmaster status`'s liveness field: a bats test driving a real
-// subprocess `juggler run` against the real ringmaster binary while polling
-// `ringmaster status --json` would need three new pieces of harness (a
-// background-run helper, a bash-reachable model/tool-plane HTTP fixture, and
-// the poll loop itself) that do not exist in zz-tests_bats/juggler_lifecycle.bats
-// today — this test instead calls the REAL jobwake.AcquireJobLock directly
-// (the same function cmd/juggler's `juggler run` wires). It proves the lock
-// file itself enforces mutual exclusion the way a monitor's liveness probe
-// depends on: a lock a second AcquireJobLock cannot take is "alive", one it
-// can take again is "gone". The probe itself — probeJobLock — is a separate,
-// instantaneous flock-then-unlock, not a second AcquireJobLock; this test
-// exercises the lock file's semantics the probe relies on, not the probe's
-// own code path. Identity with what `ringmaster status` reads holds by code
-// reading, not by this test driving the real CLI: a.target = b.Parent = the
-// CLI's --target, and AcquireJobLock resolves ChannelID(resolveSession(target))
-// the same way Start does. The real bats version (real ringmaster binary, a
-// real `juggler run` subprocess, polling `ringmaster status`) goes with the
-// reaper test, tracked as clown#257.
+// `ringmaster status`'s liveness field. It calls the REAL
+// jobwake.AcquireJobLock (the same function cmd/juggler's `juggler run` wires)
+// against a REAL in-process host service (S7: the hold lives in the service,
+// over a socket, no longer in a lock file). A job another connection holds is
+// "alive" (a second AcquireJobLock gets ErrAlreadyLocked); once released it is
+// "gone" and can be taken again. The real bats version (the real ringmaster
+// binary and a `juggler run` subprocess) is the reaper test in
+// zz-tests_bats/juggler_reaper.bats.
 func TestJobwakeAcquireJobLock_AliveWhileHeldGoneAfterRelease(t *testing.T) {
-	t.Setenv("XDG_STATE_HOME", t.TempDir())
-	h := newHarness(t)
-	ctx := context.Background()
-	job, err := h.deps.Ringmaster.Start(ctx, testRoot, "test", "test")
+	startServiceForTest(t)
+	job, err := jobwake.Start(jobwake.StartOpts{Target: testRoot, Label: "test", Source: "test"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -72,21 +72,21 @@ type AgentDeps struct {
 	// reachable by the agent's own tool calls (clown#255 delta review finding
 	// 2). Nil disables traffic entirely.
 	TrafficPath func(principal, job string) string
-	// AcquireJobLock takes the ringmaster producer's advisory lock on the
-	// job for the run's whole lifetime (RFC-0018 §2; clown#256). The unit's
-	// exit-wake hook is the first-line backstop for every unit; this lock
-	// is what lets ringmaster's host-wide liveness reaper (ringmaster#33,
-	// landed) act as the backstop FOR the hook instead — any long-running
-	// `ringmaster monitor` or standalone `ringmaster reap` on the host
-	// scans every channel, not just the one it is itself a consumer on,
-	// so a juggler job needs no monitor of its own (`juggler spawn`
-	// launches none): a lock released without a terminal record is reaped
-	// `interrupted` one grace period after the first such reaper observes
-	// it, including after a reboot. A host running neither a monitor nor
-	// `ringmaster reap` still has the gap the hook exists to cover — that
-	// deployment is the host's own responsibility. Acquired right after
-	// the job exists (self-started or adopted from `juggler spawn`) and
-	// released only after Done has returned, in finish. Defaults to a
+	// AcquireJobLock holds the job on ringmaster's host service for the
+	// run's whole lifetime (RFC-0016, RFC-0020 §5; clown#256). The unit's
+	// exit-wake hook is the first-line backstop for every unit; this hold
+	// is what lets the host service (`ringmaster serve`) act as the
+	// backstop FOR the hook instead — it watches every channel on the
+	// host, so a juggler job needs no monitor of its own (`juggler spawn`
+	// launches none): a held job whose hold is gone for three continuous
+	// seconds without a terminal record is written `interrupted` by the
+	// service, including after a service restart. The service is
+	// required; with none running every platform call fails with
+	// ErrServiceUnavailable. Acquired right after the job exists
+	// (self-started or adopted from `juggler spawn`; the service requires
+	// the holder to acquire after Start) and released only after Done has
+	// returned, in finish (it must not release before its terminal is
+	// durable). Defaults to a
 	// no-op (no lock, today's behavior): cmd/juggler's `juggler run` wires
 	// jobwake.AcquireJobLock; tests inject a fake that records
 	// acquire/release ordering.
@@ -188,9 +188,10 @@ func RunAgent(ctx context.Context, deps AgentDeps, req AgentRequest) (AgentOutco
 	wallClock, _ := b.Limits.WallClockDuration()
 	deadline := deps.Now().Add(wallClock)
 	a := &agentRun{deps: deps, brief: b, target: b.Parent, job: req.Job}
-	// PLATFORM REQUIREMENT: ringmaster speaks exactly protocol 3 (RFC-0018):
-	// the `aborted` state, `cancel-requested` records, `wait --on-cancel`,
-	// and (clown#256) the v3 liveness reaper and job lock.
+	// PLATFORM REQUIREMENT: ringmaster speaks exactly protocol 4 (RFC-0018,
+	// RFC-0020): the `aborted` state, `cancel-requested` records,
+	// `wait --on-cancel`, and the host service that holds the store, the
+	// job hold and the dead-producer reaping.
 	// ProtocolCheckedRingmaster (cmd/juggler) enforces the exact match
 	// before the first real job-platform call.
 	if a.job == "" {
@@ -219,10 +220,9 @@ func RunAgent(ctx context.Context, deps AgentDeps, req AgentRequest) (AgentOutco
 	}
 	// Hold the job's advisory lock for the run's whole lifetime, whether the
 	// job was just started above or adopted from `juggler spawn` (clown#256,
-	// FDR 0019 §6): this is what lets ringmaster's host-wide liveness
-	// reaper act as the exit-wake hook's own backstop — see
-	// AgentDeps.AcquireJobLock's doc for exactly what that covers and what
-	// it does not (a host running neither a monitor nor `ringmaster reap`).
+	// FDR 0019 §6): this is what lets ringmaster's host service act as the
+	// exit-wake hook's own backstop — see AgentDeps.AcquireJobLock's doc
+	// for exactly what that covers.
 	switch release, lockErr := deps.AcquireJobLock(a.target, a.job); {
 	case lockErr == nil:
 		a.releaseLock = release

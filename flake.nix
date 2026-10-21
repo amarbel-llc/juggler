@@ -50,7 +50,11 @@
     # go.nix's flakeInputs bridge (pkgs/jobwake; juggler exact-matches its
     # protocol version), and as the `ringmaster` binary whose store path is
     # burned into juggler (main.RingmasterPath).
-    ringmaster.url = "https://code.linenisgreat.com/ringmaster/archive/master.tar.gz";
+    #
+    # S7 flag-day branch (ringmaster 2dd17cf): the store is private behind a host
+    # service socket and ProtocolVersion is 4. Branch-only until ringmaster lands
+    # S7 on master; then this goes back to master.tar.gz.
+    ringmaster.url = "https://code.linenisgreat.com/ringmaster/archive/s7-flag-day.tar.gz";
     ringmaster.inputs.igloo.follows = "igloo";
     ringmaster.inputs.nixpkgs-master.follows = "nixpkgs";
     ringmaster.inputs.utils.follows = "utils";
@@ -72,7 +76,10 @@
     troupe.inputs.nixpkgs.follows = "igloo";
     troupe.inputs.utils.follows = "utils";
     troupe.inputs.treefmt-nix.follows = "igloo/treefmt-nix";
-    troupe.inputs.ringmaster.follows = "ringmaster";
+    # troupe keeps its OWN ringmaster pin on this branch: it still uses the
+    # retired jobwake store API (JournalDir, AppendRecord, ...) and does not
+    # compile against S7. Re-add `troupe.inputs.ringmaster.follows = "ringmaster"`
+    # once troupe is ported.
     troupe.inputs.nixpkgs-master.follows = "nixpkgs";
 
     # llama-cpp with Anthropic Messages API (/v1/messages) support — requires
@@ -383,8 +390,8 @@
             base = fake-platform-go;
             name = "fake-platform";
           };
-          # The REAL ringmaster, driven directly by juggler_reaper.bats
-          # (`ringmaster reap`, clown#257).
+          # The REAL ringmaster, driven directly by juggler_reaper.bats (a real
+          # `ringmaster serve` that reaps a killed lock holder, clown#257, S7).
           RINGMASTER_BIN = {
             base = ringmasterPkg;
             name = "ringmaster";

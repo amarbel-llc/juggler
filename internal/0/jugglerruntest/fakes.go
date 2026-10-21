@@ -9,7 +9,7 @@
 // keeps a per-target journal on disk, so start/progress/done/read/status/
 // spool-path/wait behave like the real v3 protocol (ringmaster#27, clown#256):
 // `done` against an already-terminal job exits 3 (not generic 1), and
-// `version --protocol` prints fakeRingmasterDefaultProtocol ("3") unless
+// `version --protocol` prints fakeRingmasterDefaultProtocol ("4") unless
 // SetRingmasterProtocolVersion overrides it, to simulate a mismatched build;
 // the troupe fake records MUC posts and wakes and keeps room affiliations
 // (`muc create`/`muc affiliate`, with troupe's owner and last-owner rules);
@@ -772,8 +772,9 @@ func fakeMoxyCLI(dir string, args []string) int {
 
 // fakeRingmasterDefaultProtocol is the fake's default `version --protocol`
 // answer, matching the real jobwake.ProtocolVersion this fake otherwise
-// emulates (ringmaster v3, clown#256).
-const fakeRingmasterDefaultProtocol = "3"
+// emulates (ringmaster v4, S7: the store sits behind the host service; this
+// fake still keeps its own on-disk journal and emulates only the CLI verbs).
+const fakeRingmasterDefaultProtocol = "4"
 
 // SetRingmasterProtocolVersion makes the fake ringmaster's `version
 // --protocol` report version instead of fakeRingmasterDefaultProtocol, to
