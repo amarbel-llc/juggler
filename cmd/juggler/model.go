@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	rm "code.linenisgreat.com/juggler/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/0/juggler"
 )
 
 // modelUsage is printed on any `juggler model` usage error — missing or

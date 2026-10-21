@@ -236,12 +236,10 @@
     "gomod2nix_2": {
       "inputs": {
         "flake-utils": [
-          "ringmaster",
           "purse-first",
           "utils"
         ],
         "nixpkgs-master": [
-          "ringmaster",
           "purse-first",
           "nixpkgs-master"
         ]
@@ -449,29 +447,25 @@
     "purse-first_2": {
       "inputs": {
         "conformist": [
-          "ringmaster",
           "conformist"
         ],
         "gomod2nix": "gomod2nix_2",
         "igloo": [
-          "ringmaster",
           "igloo"
         ],
         "nixpkgs-master": [
-          "ringmaster",
-          "nixpkgs-master"
+          "nixpkgs"
         ],
         "utils": [
-          "ringmaster",
           "utils"
         ]
       },
       "locked": {
-        "lastModified": 1792147970,
-        "narHash": "sha256-0BYVa82vGQBfWECahcWgA+tCY+baMrT3IWs1u41ed0g=",
-        "rev": "5f4578506429b1bf7c29ceab7dceb83e7b85f80e",
+        "lastModified": 1792521271,
+        "narHash": "sha256-fA7N2Anad+yWdNwPplmBiJsg+jlZhFjz/PY4tHDl5lU=",
+        "rev": "bb78647066e8a6829bf877758b3d2ac2672de408",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/purse-first/archive/5f4578506429b1bf7c29ceab7dceb83e7b85f80e.tar.gz"
+        "url": "https://code.linenisgreat.com/purse-first/archive/bb78647066e8a6829bf877758b3d2ac2672de408.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -567,7 +561,9 @@
         "nixpkgs-master": [
           "nixpkgs"
         ],
-        "purse-first": "purse-first_2",
+        "purse-first": [
+          "purse-first"
+        ],
         "utils": [
           "utils"
         ]
@@ -595,6 +591,7 @@
           "nixpkgs-master"
         ],
         "nixpkgs-llama": "nixpkgs-llama",
+        "purse-first": "purse-first_2",
         "ringmaster": "ringmaster_2",
         "tommy": "tommy",
         "troupe": "troupe",

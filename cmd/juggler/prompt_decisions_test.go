@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	rm "code.linenisgreat.com/juggler/internal/juggler"
+	rm "code.linenisgreat.com/juggler/internal/0/juggler"
 )
 
 // TestSendPrompt_DecisionsStyleRejected pins FDR 0019 §8: the "decisions"

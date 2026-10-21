@@ -15,6 +15,8 @@
 
   # Prose and generated files are out of scope for code formatters.
   settings.excludes = [
+    # The dagnabit facade is generated and formatted by dagnabit itself.
+    "pkgs/**"
     "*.md"
     "flake.lock"
     "LICENSE"

@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	rm "code.linenisgreat.com/juggler/internal/juggler"
-	jr "code.linenisgreat.com/juggler/internal/jugglerrun"
-	"code.linenisgreat.com/juggler/internal/jugglerrun/jugglerruntest"
+	rm "code.linenisgreat.com/juggler/internal/0/juggler"
+	"code.linenisgreat.com/juggler/internal/0/jugglerruntest"
+	jr "code.linenisgreat.com/juggler/internal/charlie/jugglerrun"
 )
 
 func TestMain(m *testing.M) {

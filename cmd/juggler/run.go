@@ -11,9 +11,9 @@ import (
 	"os"
 	"time"
 
-	rm "code.linenisgreat.com/juggler/internal/juggler"
-	"code.linenisgreat.com/juggler/internal/jugglerbrief"
-	jr "code.linenisgreat.com/juggler/internal/jugglerrun"
+	rm "code.linenisgreat.com/juggler/internal/0/juggler"
+	"code.linenisgreat.com/juggler/internal/alfa/jugglerbrief"
+	jr "code.linenisgreat.com/juggler/internal/charlie/jugglerrun"
 	"code.linenisgreat.com/ringmaster/pkgs/jobwake"
 )
 

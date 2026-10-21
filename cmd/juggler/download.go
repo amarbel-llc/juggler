@@ -13,7 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/term"
 
-	"code.linenisgreat.com/juggler/internal/jugglermodels"
+	"code.linenisgreat.com/juggler/internal/0/jugglermodels"
 )
 
 type (
