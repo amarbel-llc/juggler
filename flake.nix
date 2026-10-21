@@ -72,14 +72,16 @@
     tommy.inputs.conformist.follows = "conformist";
 
     # troupe: BINARY-only (main.TroupePath); juggler does not import its Go.
-    troupe.url = "https://code.linenisgreat.com/troupe/archive/master.tar.gz";
+    #
+    # S7 flag-day branch snug-oak (troupe's port to the ringmaster host service,
+    # gate green against s7-flag-day). Branch-only: the last commit before this
+    # lands restores BOTH the troupe and the ringmaster URLs to master.tar.gz and
+    # re-locks, once troupe and ringmaster master have S7.
+    troupe.url = "https://code.linenisgreat.com/troupe/archive/snug-oak.tar.gz";
     troupe.inputs.nixpkgs.follows = "igloo";
     troupe.inputs.utils.follows = "utils";
     troupe.inputs.treefmt-nix.follows = "igloo/treefmt-nix";
-    # troupe keeps its OWN ringmaster pin on this branch: it still uses the
-    # retired jobwake store API (JournalDir, AppendRecord, ...) and does not
-    # compile against S7. Re-add `troupe.inputs.ringmaster.follows = "ringmaster"`
-    # once troupe is ported.
+    troupe.inputs.ringmaster.follows = "ringmaster";
     troupe.inputs.nixpkgs-master.follows = "nixpkgs";
 
     # llama-cpp with Anthropic Messages API (/v1/messages) support — requires

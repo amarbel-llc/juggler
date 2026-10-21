@@ -58,41 +58,6 @@
         "url": "https://code.linenisgreat.com/bats/archive/master.tar.gz"
       }
     },
-    "bats_3": {
-      "inputs": {
-        "conformist": [
-          "troupe",
-          "ringmaster",
-          "conformist"
-        ],
-        "igloo": [
-          "troupe",
-          "ringmaster",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "troupe",
-          "ringmaster",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "troupe",
-          "ringmaster",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792583953,
-        "narHash": "sha256-N5MvGfSGSHh5bqhTJRuxHrAG9ZdWEtV2xFG8mzWoZTc=",
-        "rev": "c1ee823e1b3d02cb724c77d5c8046374a934f989",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/bats/archive/c1ee823e1b3d02cb724c77d5c8046374a934f989.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/bats/archive/master.tar.gz"
-      }
-    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -177,36 +142,6 @@
         "rev": "b4581ae7e1271ef306e4d0c5858c694ab2ad3afc",
         "type": "tarball",
         "url": "https://code.linenisgreat.com/conformist/archive/b4581ae7e1271ef306e4d0c5858c694ab2ad3afc.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/conformist/archive/master.tar.gz"
-      }
-    },
-    "conformist_2": {
-      "inputs": {
-        "igloo": [
-          "troupe",
-          "ringmaster",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "troupe",
-          "ringmaster",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "troupe",
-          "ringmaster",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792582440,
-        "narHash": "sha256-P9wW7jhj+/ZjWIzVg7RL6dq069+N9ibUU4dtCuSOnvs=",
-        "rev": "5533496b20614fd59be59b8cfd01d29d4ad71f51",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/conformist/archive/5533496b20614fd59be59b8cfd01d29d4ad71f51.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -340,33 +275,6 @@
         "rev": "38d90d9cdcaca83282c78f8ce1f89414b3e0d854",
         "type": "tarball",
         "url": "https://code.linenisgreat.com/gomod2nix/archive/38d90d9cdcaca83282c78f8ce1f89414b3e0d854.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/gomod2nix/archive/master.tar.gz"
-      }
-    },
-    "gomod2nix_4": {
-      "inputs": {
-        "flake-utils": [
-          "troupe",
-          "ringmaster",
-          "purse-first",
-          "utils"
-        ],
-        "nixpkgs-master": [
-          "troupe",
-          "ringmaster",
-          "purse-first",
-          "nixpkgs-master"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792264318,
-        "narHash": "sha256-obdl5uwqKBNbYOgRssFzG88XQh8JWw/xwDhTaiTBd4A=",
-        "rev": "3171d7cb8b80f30baba5da12b29817c152a2df03",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/gomod2nix/archive/3171d7cb8b80f30baba5da12b29817c152a2df03.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -603,42 +511,6 @@
         "url": "https://code.linenisgreat.com/purse-first/archive/master.tar.gz"
       }
     },
-    "purse-first_4": {
-      "inputs": {
-        "conformist": [
-          "troupe",
-          "ringmaster",
-          "conformist"
-        ],
-        "gomod2nix": "gomod2nix_4",
-        "igloo": [
-          "troupe",
-          "ringmaster",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "troupe",
-          "ringmaster",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "troupe",
-          "ringmaster",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792583371,
-        "narHash": "sha256-7L7Mq0iBkT6vRg4vgiT0DoiqmtFA/O2ITIA2mXUEVRU=",
-        "rev": "253d3457dbf408b75552307752b483ce1594608a",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/purse-first/archive/253d3457dbf408b75552307752b483ce1594608a.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/purse-first/archive/master.tar.gz"
-      }
-    },
     "ringmaster": {
       "inputs": {
         "bats": [
@@ -697,46 +569,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1792589938,
-        "narHash": "sha256-rX0SjWWI4ju+d1hFXYBgphNOr2iUHs+0YEwaMk7RJOY=",
-        "rev": "2dd17cfc0cb0ca10ded9c089bfd669fe5f2ad43f",
+        "lastModified": 1792591382,
+        "narHash": "sha256-CK2AhjdnTnRFYHur+XqZqmxlBPNLpQg4oJL0cwR7c/8=",
+        "rev": "4fff1ece3a268ddc11b2a29ad1e55c0bb9630e2b",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/ringmaster/archive/2dd17cfc0cb0ca10ded9c089bfd669fe5f2ad43f.tar.gz"
+        "url": "https://code.linenisgreat.com/ringmaster/archive/4fff1ece3a268ddc11b2a29ad1e55c0bb9630e2b.tar.gz"
       },
       "original": {
         "type": "tarball",
         "url": "https://code.linenisgreat.com/ringmaster/archive/s7-flag-day.tar.gz"
-      }
-    },
-    "ringmaster_3": {
-      "inputs": {
-        "bats": "bats_3",
-        "conformist": "conformist_2",
-        "igloo": [
-          "troupe",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "troupe",
-          "nixpkgs",
-          "nixpkgs-master"
-        ],
-        "purse-first": "purse-first_4",
-        "utils": [
-          "troupe",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792588524,
-        "narHash": "sha256-5d8VRIVXsYgRYdH6VEThkXdEdBpiWqspCZ6lagQdcvo=",
-        "rev": "07ad2c058b15e57345e57792d5a17ff9507db7b1",
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/ringmaster/archive/07ad2c058b15e57345e57792d5a17ff9507db7b1.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://code.linenisgreat.com/ringmaster/archive/master.tar.gz"
       }
     },
     "root": {
@@ -924,7 +765,9 @@
         "nixpkgs-master": [
           "nixpkgs"
         ],
-        "ringmaster": "ringmaster_3",
+        "ringmaster": [
+          "ringmaster"
+        ],
         "treefmt-nix": [
           "igloo",
           "treefmt-nix"
@@ -934,15 +777,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1792523729,
-        "narHash": "sha256-mZxaUT6IIzCrbwxCy++R2GSKQvoA58JTSA+4g31sSxs=",
-        "rev": "7e633692603ac123876c0a9044bc069592f0b8c6",
+        "lastModified": 1792591535,
+        "narHash": "sha256-YKRTj5x3DdztutpdSdX4zTtl6G+kpcmfIhUVNoNwpvE=",
+        "rev": "233bde14ddd30e9ca7cbe4dc8ff4f0f7dbc6146b",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/troupe/archive/7e633692603ac123876c0a9044bc069592f0b8c6.tar.gz"
+        "url": "https://code.linenisgreat.com/troupe/archive/233bde14ddd30e9ca7cbe4dc8ff4f0f7dbc6146b.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/troupe/archive/master.tar.gz"
+        "url": "https://code.linenisgreat.com/troupe/archive/snug-oak.tar.gz"
       }
     },
     "utils": {
