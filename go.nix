@@ -10,7 +10,7 @@
       input = "tommy";
     };
   };
-  go = "1.26";
+  go = "1.26.0";
   module = "code.linenisgreat.com/juggler";
   replace = { };
   require = {
@@ -18,11 +18,6 @@
       go = "1.18";
       hash = "sha256-ptdUJvuc21ixeLt+M5way/na3aCnCO4MYHWulWp8NEY=";
       version = "v1.6.0";
-    };
-    "github.com/atotto/clipboard" = {
-      hash = "sha256-ZZ7U5X0gWOu8zcjZcWbcpzGOGdycwq0TjTFh/eZHjXk=";
-      indirect = true;
-      version = "v0.1.4";
     };
     "github.com/aymanbagabas/go-osc52/v2" = {
       go = "1.16";
@@ -55,6 +50,7 @@
     "github.com/charmbracelet/lipgloss" = {
       go = "1.18";
       hash = "sha256-RHsRT2EZ1nDOElxAK+6/DC9XAaGVjDTgPvRh3pyCfY4=";
+      indirect = true;
       version = "v1.1.0";
     };
     "github.com/charmbracelet/x/ansi" = {
@@ -151,11 +147,6 @@
       indirect = true;
       version = "v0.4.7";
     };
-    "github.com/sahilm/fuzzy" = {
-      hash = "sha256-f2VsDI6G+V2w31tSDzbZPi9EI2E7jRV6Aq8yeOorSZY=";
-      indirect = true;
-      version = "v0.1.1";
-    };
     "github.com/xo/terminfo" = {
       go = "1.19";
       hash = "sha256-GyCDxxMQhXA3Pi/TsWXpA8cX5akEoZV7CFx4RO3rARU=";
@@ -163,14 +154,15 @@
       version = "v0.0.0-20220910002029-abceb7e1c41e";
     };
     "golang.org/x/sync" = {
-      go = "1.25.0";
-      hash = "sha256-ybcjhCfK6lroUM0yswUvWooW8MOQZBXyiSqoxG6Uy0Y=";
+      go = "1.26.0";
+      hash = "sha256-gViyLpsZFBKTEUtK6Li3m6plz5J/VCAcpTLymQVRpj4=";
       indirect = true;
-      version = "v0.20.0";
+      version = "v0.24.0";
     };
     "golang.org/x/sys" = {
       go = "1.25.0";
       hash = "sha256-aDQXqSTZES2l/132PBxhZN4ywldpPyfm7LByYCHzzwM=";
+      indirect = true;
       version = "v0.43.0";
     };
     "golang.org/x/term" = {
