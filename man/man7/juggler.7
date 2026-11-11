@@ -279,6 +279,23 @@ other call keeps all its URIs, a
 blob link
 .Pq moxy's store for an oversized result, which may hold the product
 included.
+Each
+.Ql tools/call
+the agent makes to its moxy runs under juggler's own per-call deadline of 30 seconds
+.Pq Dv DefaultCallTimeout No in the tool-plane client ;
+it is not a moxy setting and is not configurable per brief.
+A call that outruns it is abandoned and answered to the model as an
+.Ql isError
+tool result, the same as a tool's own failure, so the model may retry or narrow
+the request; the run does not end.
+The abandoned call may still be running upstream, so a retry of a
+non-idempotent tool can run it twice.
+Only the run's own wall clock or cancellation ends the run as
+.Ql timeout ,
+and a transport fault the model cannot act on
+.Pq non-200, malformed response, oversized response, unreachable moxy
+still ends it as
+.Ql tool_error .
 Success is measured, never reported: the model never claims it.
 .It Pa traffic.jsonl
 .Pq clown#255

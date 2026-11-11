@@ -9,7 +9,9 @@
 //   - the returned error is a transport or protocol failure (network error,
 //     non-200, malformed JSON-RPC, JSON-RPC error envelope other than
 //     invalid params, oversized response). The agent loop treats it as a
-//     failed call it did not get a tool answer for.
+//     failed call it did not get a tool answer for. A tools/call that
+//     outruns the per-call timeout (DefaultCallTimeout) is not one of these:
+//     it is reported as isError so the model can retry.
 //   - isError == true is MCP's tool-level failure: the tool ran (or moxy
 //     answered on its behalf) and reported failure in the CallToolResult.
 //     The model should see the content as ordinary tool output. A JSON-RPC
@@ -200,6 +202,15 @@ func (c *Client) Call(ctx context.Context, name string, args json.RawMessage) (j
 		var rpcErr *rpcError
 		if errors.As(err, &rpcErr) && rpcErr.Code == codeInvalidParams {
 			content, _ := json.Marshal([]map[string]string{{"type": "text", "text": rpcErr.Message}})
+			return content, true, nil
+		}
+		// The per-call deadline elapsed while the run's own context is still
+		// live: the tool was slow, which the model can act on (retry, narrow
+		// the request), so it is a tool-level error. A cancelled or expired
+		// run context stays a returned error so the loop ends the run.
+		if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
+			text := fmt.Sprintf("tool call %q exceeded the %s per-call deadline and was abandoned; it may still be running upstream", name, c.timeout)
+			content, _ := json.Marshal([]map[string]string{{"type": "text", "text": text}})
 			return content, true, nil
 		}
 		return nil, false, fmt.Errorf("tools/call %q: %w", name, err)

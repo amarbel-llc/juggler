@@ -208,11 +208,34 @@ func TestCallTimeout(t *testing.T) {
 	defer srv.Close()
 	c := New(srv.URL, WithCallTimeout(50*time.Millisecond))
 	start := time.Now()
-	if _, _, err := c.Call(context.Background(), "t", nil); err == nil {
-		t.Fatal("expected timeout error")
+	content, isErr, err := c.Call(context.Background(), "t", nil)
+	if err != nil || !isErr || !strings.Contains(string(content), "per-call deadline") {
+		t.Fatalf("per-call timeout: content=%s isErr=%v err=%v, want an isError tool result", content, isErr, err)
 	}
 	if time.Since(start) > 2*time.Second {
 		t.Error("timeout not honoured")
+	}
+	// Other round-trips keep the error: only tools/call is the model's to retry.
+	if _, err := c.ListTools(context.Background()); err == nil {
+		t.Error("tools/list timeout must stay an error")
+	}
+}
+
+// A run context that is cancelled or past its own deadline is not the
+// per-call deadline: Call returns the error so the loop ends the run.
+func TestCallRunContextDoneStaysAnError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(500 * time.Millisecond):
+		}
+	}))
+	defer srv.Close()
+	c := New(srv.URL)
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	if _, isErr, err := c.Call(ctx, "t", nil); err == nil || isErr {
+		t.Fatalf("expired run ctx: isErr=%v err=%v, want a returned error", isErr, err)
 	}
 }
 
