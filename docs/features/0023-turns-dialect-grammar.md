@@ -228,10 +228,9 @@ fields the operator accepted for `provider`; `future` follows the same rule).
 - *Per-call ledger fields (tool, kind, ok, uris).* Exist and are stable
   (`LedgerCall`, plus optional `future`, `args_digest`).
 - *A stable handle or digest for a run's turn log.* FDR 0022 handles are
-  **per tool call**, not per run, so they are not that. A `transcript_digest`
-  (sha256 of the canonical transcript) written into the run record at finish
-  would be; whether the transcript is stored where a digest is cheap to take is
-  unverified (*Open questions*, 5).
+  **per tool call**, not per run, so they are not that. `ledger.transcript_digest`
+  is (built; *Open questions*, 5), with the limit that the transcript is not
+  stored by juggler (question 8).
 
 ## Examples
 
@@ -287,13 +286,32 @@ the ceilings is refused.
    as `terminal.result` on the terminal turn and as `end.result` in the ledger;
    otherwise `result_error` (a sentence) on both and no `result`. A run that did
    not opt in, or ended another way, carries neither field; existing
-   transcripts and ledgers serialise unchanged. The code was written before its
+   transcripts and ledgers serialise unchanged. The value is compact on the
+   terminal turn and in memory, but the **ledger file** on disk is written
+   indented (which re-indents the value inside it); `juggler spawn --wait`
+   prints `result` (and `result_error`, `transcript_digest`) from the ledger,
+   re-compacted, under those exact keys, absent when the ledger has none. A
+   failed agent (`state` not `succeeded`) can still carry a `result`: the
+   evaluator decides success. The code was written before its
    tests (the ruling asked for tests first).
-5. **ACCEPTED (operator, 2026-11-12, Q23): a run transcript digest**, additive,
-   schema stays 1. Being built.
+5. **ACCEPTED and BUILT (operator, 2026-11-12, Q23): a run transcript digest**,
+   additive, schema stays 1. Shape: `ledger.transcript_digest` =
+   `sha256:<hex>` of the finished transcript's JSON as `encoding/json` marshals
+   it (every turn, terminal included; deterministic), exported as
+   `jugglerloop.TranscriptDigest(Transcript)` so a holder of the turns can
+   recompute it. **Limit, stated plainly:** juggler does not persist the
+   transcript; the turns go to the run's room (oversized ones truncated there)
+   and the journal as they happen. The digest therefore names the turn log and
+   can be verified only by someone who holds the whole transcript (for example,
+   by collecting `OnTurn` in-process). *New question 8 below.*
 6. **DEFERRED (operator, 2026-11-12, Q24): per-step tool offering is NOT built
    yet**; the dialect (the pinned, versioned document and its envelope) comes
    first. Recorded here as deferred; §2 keeps it as the one new capability.
+8. **Operator: persist the transcript so the digest can be verified?** Write the
+   canonical transcript next to the ledger (a second spool file named by the
+   digest), so `ledger.transcript_digest` resolves to bytes. Recommendation: yes,
+   as its own change; transcripts hold tool results (possibly large or sensitive),
+   so it needs a size/retention rule first. Not built.
 7. **Numbering.** juggler's FDR 0023 and roustabout's file carry the shared slug
    `grammar-dialects`; others' records are not renumbered.
 

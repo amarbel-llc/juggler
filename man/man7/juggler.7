@@ -293,6 +293,16 @@ and a
 .Ql result_error
 saying why, on both; it does not change how the run ended.
 A run that does not opt in, or ends any other way, carries neither field.
+The ledger also carries
+.Ql transcript_digest :
+.Ql sha256:
+and the hex SHA-256 of the finished transcript's JSON as
+.Xr encoding/json 3
+marshals it (terminal turn included), a stable name for the run's turn log that a
+consumer can cite.
+The loop does not store the transcript, only this digest; it identifies one run's
+turn sequence, timestamps and provider metadata included.
+It is absent for a run whose loop never started.
 A call's URIs come from the MCP result's
 .Ql structuredContent
 first, then from its content blocks.

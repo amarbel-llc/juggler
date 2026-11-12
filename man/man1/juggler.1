@@ -997,7 +997,29 @@ The consumed binaries; see
 With
 .Fl -wait ,
 prints
-.Sy {"jid","job","room","state","reason","message","ledger","traffic","artifacts":[{"tool","kind","uris"}],"cannot_complete":null|{"reason"}} .
+.Sy {"jid","job","room","state","reason","message","ledger","traffic","artifacts":[{"tool","kind","uris"}],"cannot_complete":null|{"reason"},"result","result_error","transcript_digest"} .
+.Ql result ,
+.Ql result_error
+and
+.Ql transcript_digest
+are read from the ledger and present only when it carries them (FDR 0023):
+.Ql result
+is the structured result of a brief that opted in with
+.Ql [result] format = "json" ,
+the model's final JSON value as printed compact, and
+.Ql result_error
+says why a run that opted in has none; neither appears for a run that ended any
+other way than
+.Ql end_turn ,
+and a run whose
+.Ql state
+is not
+.Ql succeeded
+can still carry a
+.Ql result
+\(em the brief's evaluator, not the result, decides success;
+.Ql transcript_digest
+names the run's turn log.
 .Ql state
 is the ringmaster state
 .Pq or Ql running ,

@@ -834,6 +834,15 @@ type WaitRecord struct {
 	Traffic        string                      `json:"traffic,omitempty"`
 	Artifacts      []Artifact                  `json:"artifacts"`
 	CannotComplete *jugglerloop.CannotComplete `json:"cannot_complete"`
+	// Result, ResultError and TranscriptDigest are read from the ledger's end
+	// (FDR 0023): the run's structured result (the brief's [result] opt-in) or
+	// why it has none, and the digest naming its turn log. Each is absent when
+	// the ledger carries none, so a wait for a run that did not opt in prints
+	// exactly what it did before. A run whose state is not succeeded can still
+	// carry a result (the evaluator, not the result, decides success).
+	Result           json.RawMessage `json:"result,omitempty"`
+	ResultError      string          `json:"result_error,omitempty"`
+	TranscriptDigest string          `json:"transcript_digest,omitempty"`
 }
 
 // ExitCode mirrors the state; a job still running after the wait is 5.
@@ -918,6 +927,13 @@ func WaitChild(ctx context.Context, deps LifecycleDeps, rec *ChildRecord, timeou
 	if found {
 		out.Artifacts = ArtifactsFromLedger(l)
 		out.CannotComplete = l.CannotComplete
+		out.Result, out.ResultError, out.TranscriptDigest = l.End.Result, l.End.ResultError, l.TranscriptDigest
+		// The spooled ledger is written indented, which re-indents the result
+		// inside it; print it compact, as the loop produced it.
+		var compact bytes.Buffer
+		if len(out.Result) > 0 && json.Compact(&compact, out.Result) == nil {
+			out.Result = json.RawMessage(compact.Bytes())
+		}
 	}
 	return out, nil
 }

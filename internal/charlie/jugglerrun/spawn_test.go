@@ -609,6 +609,54 @@ func TestWaitChild(t *testing.T) {
 			t.Fatalf("wait = %+v, err = %v", w, err)
 		}
 	})
+	t.Run("structured result", func(t *testing.T) {
+		with := jugglerloop.Ledger{
+			Schema: 1, Calls: []jugglerloop.LedgerCall{}, TranscriptDigest: "sha256:abc",
+			End: jugglerloop.LedgerEnd{Reason: jugglerloop.EndTurn, Result: json.RawMessage(`{"findings":[1]}`)},
+		}
+		bad := jugglerloop.Ledger{
+			Schema: 1, Calls: []jugglerloop.LedgerCall{},
+			End: jugglerloop.LedgerEnd{Reason: jugglerloop.EndTurn, ResultError: "the final message is not valid JSON"},
+		}
+
+		h := newHarness(t)
+		pinPrincipals(h, testRoot, "child-1")
+		newRun(t, h, "rec-42")
+		rec := spawnChild(t, h)
+		// The evaluator, not the result, decides success: a failed agent still carries it.
+		finishAgent(t, h, rec, StateFailed, "evaluator failed", with)
+		w, err := WaitChild(context.Background(), h.deps, rec, time.Second, 0)
+		if err != nil || w.State != StateFailed || string(w.Result) != `{"findings":[1]}` || w.ResultError != "" || w.TranscriptDigest != "sha256:abc" {
+			t.Fatalf("wait = %+v, err = %v", w, err)
+		}
+		if b, _ := json.Marshal(w); !strings.Contains(string(b), `"result":{"findings":[1]}`) || !strings.Contains(string(b), `"transcript_digest":"sha256:abc"`) {
+			t.Errorf("wait JSON = %s", b)
+		}
+
+		h2 := newHarness(t)
+		pinPrincipals(h2, testRoot, "child-1")
+		newRun(t, h2, "rec-42")
+		rec2 := spawnChild(t, h2)
+		finishAgent(t, h2, rec2, StateFailed, "evaluator failed", bad)
+		w2, err := WaitChild(context.Background(), h2.deps, rec2, time.Second, 0)
+		if err != nil || len(w2.Result) != 0 || w2.ResultError != "the final message is not valid JSON" {
+			t.Fatalf("wait = %+v, err = %v", w2, err)
+		}
+	})
+	t.Run("no result keys without an opt-in", func(t *testing.T) {
+		h := newHarness(t)
+		pinPrincipals(h, testRoot, "child-1")
+		newRun(t, h, "rec-42")
+		rec := spawnChild(t, h)
+		finishAgent(t, h, rec, StateSucceeded, "evaluator passed", succeeded)
+		w, err := WaitChild(context.Background(), h.deps, rec, time.Second, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if b, _ := json.Marshal(w); strings.Contains(string(b), `"result`) || strings.Contains(string(b), "transcript_digest") {
+			t.Errorf("wait JSON carries result keys without an opt-in: %s", b)
+		}
+	})
 	t.Run("killed", func(t *testing.T) {
 		h := newHarness(t)
 		pinPrincipals(h, testRoot, "child-1")

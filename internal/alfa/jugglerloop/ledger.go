@@ -45,6 +45,12 @@ type Ledger struct {
 	// (FDR 0021 §4). Absent unless Config.StepMeta is set, so a run without a
 	// provider harness serialises exactly as before.
 	Provider *LedgerProvider `json:"provider,omitempty"`
+	// TranscriptDigest is TranscriptDigest(the run's finished transcript),
+	// terminal turn included: a stable name for the turn log, so a consumer
+	// (roustabout's run ledger) can cite it. The transcript itself is not
+	// stored by the loop; this binds the ledger to exactly one turn sequence.
+	// Absent for a run that never started its loop.
+	TranscriptDigest string `json:"transcript_digest,omitempty"`
 }
 
 // LedgerProvider is the run's provider totals: Requests counts model

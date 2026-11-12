@@ -195,6 +195,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	r.append(terminalBodyWithResult(end, result, resultErr), r.lastTurnID)
 	r.ledger.End = LedgerEnd{Reason: end, Result: result, ResultError: resultErr}
 	r.ledger.ElapsedMS = cfg.Now().Sub(start).Milliseconds()
+	r.ledger.TranscriptDigest = TranscriptDigest(r.transcript)
 	return Result{Transcript: r.transcript, Ledger: r.ledger, End: end}, runErr
 }
 
