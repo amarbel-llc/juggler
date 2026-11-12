@@ -162,6 +162,7 @@ completion_tokens = 3
 		Task:        "file one issue",
 		Tools:       []jugglerloop.ToolSpec{{Name: "list_repos", InputSchema: json.RawMessage(`{"type":"object"}`)}},
 		Exec:        exec,
+		StepMeta:    transport.Step,
 		Principal:   "agent",
 		BriefTurnID: "brief",
 	})
@@ -183,6 +184,22 @@ completion_tokens = 3
 	}
 	if len(slept) != 1 || slept[0] != time.Second {
 		t.Errorf("slept = %v, want [1s] from Retry-After", slept)
+	}
+
+	// The same account reaches the loop's ledger and turns through StepMeta.
+	want := jugglerloop.LedgerProvider{Name: "fake", Requests: 2, Attempts: 3, PromptTokens: 30, CompletionTokens: 8}
+	if res.Ledger.Provider == nil || *res.Ledger.Provider != want {
+		t.Errorf("ledger provider = %+v, want %+v", res.Ledger.Provider, want)
+	}
+	var first *jugglerloop.ProviderMeta
+	for _, turn := range res.Transcript.Turns {
+		if turn.Provider != nil {
+			first = turn.Provider
+			break
+		}
+	}
+	if first == nil || first.Attempts != 2 || first.PromptTokens != 10 {
+		t.Errorf("first model reply turn provider = %+v, want 2 attempts, 10 prompt tokens", first)
 	}
 }
 

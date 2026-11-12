@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"code.linenisgreat.com/juggler/internal/alfa/jugglerloop"
 )
 
 // DefaultMaxAttempts bounds the round trips Transport makes for one request.
@@ -38,8 +40,9 @@ type Transport struct {
 	verifyOnce sync.Once
 	verifyErr  error
 
-	mu    sync.Mutex
-	stats Stats
+	mu       sync.Mutex
+	stats    Stats
+	reported Stats // what Step has already handed out
 }
 
 var _ http.RoundTripper = (*Transport)(nil)
@@ -49,6 +52,35 @@ func (t *Transport) Stats() Stats {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.stats
+}
+
+// Step returns the harness's account of the requests since the previous Step
+// call, or nil when there were none: attempts (retries included) and the
+// usage reported. Wire it as jugglerloop.Config.StepMeta; the loop calls it
+// once per model request, success or failure.
+func (t *Transport) Step() *jugglerloop.ProviderMeta {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	d := Stats{
+		Requests: t.stats.Requests - t.reported.Requests,
+		Attempts: t.stats.Attempts - t.reported.Attempts,
+		Usage: Usage{
+			PromptTokens:     t.stats.Usage.PromptTokens - t.reported.Usage.PromptTokens,
+			CompletionTokens: t.stats.Usage.CompletionTokens - t.reported.Usage.CompletionTokens,
+			CostUSD:          t.stats.Usage.CostUSD - t.reported.Usage.CostUSD,
+		},
+	}
+	t.reported = t.stats
+	if d.Requests == 0 {
+		return nil
+	}
+	return &jugglerloop.ProviderMeta{
+		Name:             t.Provider.Name(),
+		Attempts:         d.Attempts,
+		PromptTokens:     d.Usage.PromptTokens,
+		CompletionTokens: d.Usage.CompletionTokens,
+		CostUSD:          d.Usage.CostUSD,
+	}
 }
 
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {

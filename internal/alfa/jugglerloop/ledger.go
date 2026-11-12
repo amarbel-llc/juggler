@@ -41,6 +41,23 @@ type Ledger struct {
 	// Notes are loop facts that decide nothing, e.g. a per-step StopWhen
 	// check that errored (the run went on).
 	Notes []string `json:"notes,omitempty"`
+	// Provider totals the model provider harness's per-request accounts
+	// (FDR 0021 §4). Absent unless Config.StepMeta is set, so a run without a
+	// provider harness serialises exactly as before.
+	Provider *LedgerProvider `json:"provider,omitempty"`
+}
+
+// LedgerProvider is the run's provider totals: Requests counts model
+// requests that reported a ProviderMeta (a failed request counts, so a run
+// that ended model_error still shows what it cost); Attempts counts every
+// HTTP attempt, retries included.
+type LedgerProvider struct {
+	Name             string  `json:"name,omitempty"`
+	Requests         int     `json:"requests"`
+	Attempts         int     `json:"attempts"`
+	PromptTokens     int     `json:"prompt_tokens,omitempty"`
+	CompletionTokens int     `json:"completion_tokens,omitempty"`
+	CostUSD          float64 `json:"cost_usd,omitempty"`
 }
 
 // LedgerCall is one tool-server call. Kind is the artifact kind the tool

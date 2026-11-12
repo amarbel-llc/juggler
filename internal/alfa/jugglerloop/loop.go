@@ -79,6 +79,13 @@ type Config struct {
 	OnTraffic func(TrafficRecord)
 
 	URIExtractor URIExtractor
+	// StepMeta, when set, is called once after each model request (success or
+	// failure) and returns the provider harness's account of that request,
+	// or nil when it has none. The loop totals it into Ledger.Provider and
+	// stamps it on the first turn of the reply (Turn.Provider; FDR 0021 §4).
+	// It is provider-agnostic on purpose: the host wires it from whatever
+	// wraps the HTTP client.
+	StepMeta func() *ProviderMeta
 	// StopWhen, when set, is called with the in-progress ledger (the final
 	// ledger's shape, end reason empty) after each successful tool result; true
 	// ends the run with evaluator_pass. An error is recorded as a ledger note
@@ -205,12 +212,17 @@ func toolsWithCannotComplete(tools []ToolSpec) []ToolSpec {
 }
 
 func (r *run) append(body Body, parent string) Turn {
+	return r.appendWithMeta(body, parent, nil)
+}
+
+func (r *run) appendWithMeta(body Body, parent string, meta *ProviderMeta) Turn {
 	t := Turn{
-		ID:     r.cfg.NewTurnID(),
-		Sender: r.cfg.Principal,
-		Parent: parent,
-		At:     r.cfg.Now(),
-		Body:   body,
+		ID:       r.cfg.NewTurnID(),
+		Sender:   r.cfg.Principal,
+		Parent:   parent,
+		At:       r.cfg.Now(),
+		Body:     body,
+		Provider: meta,
 	}
 	r.transcript.Turns = append(r.transcript.Turns, t)
 	r.lastTurnID = t.ID
@@ -245,6 +257,7 @@ func (r *run) loop(ctx context.Context, tools []ToolSpec) (EndReason, error) {
 			Tools:     tools,
 			MaxTokens: r.cfg.MaxTokens,
 		})
+		meta := r.stepMeta()
 		if err != nil {
 			if ctx.Err() != nil {
 				return EndTimeout, nil
@@ -253,8 +266,12 @@ func (r *run) loop(ctx context.Context, tools []ToolSpec) (EndReason, error) {
 		}
 
 		var calls []Turn
-		for _, t := range reply.Turns {
-			appended := r.append(t.Body, r.lastTurnID)
+		for i, t := range reply.Turns {
+			var turnMeta *ProviderMeta
+			if i == 0 {
+				turnMeta = meta
+			}
+			appended := r.appendWithMeta(t.Body, r.lastTurnID, turnMeta)
 			if appended.Body.Type == BodyToolCall {
 				calls = append(calls, appended)
 			}
@@ -273,6 +290,31 @@ func (r *run) loop(ctx context.Context, tools []ToolSpec) (EndReason, error) {
 			}
 		}
 	}
+}
+
+// stepMeta asks Config.StepMeta for the last model request's account and
+// totals it into the ledger; nil when no harness reports one.
+func (r *run) stepMeta() *ProviderMeta {
+	if r.cfg.StepMeta == nil {
+		return nil
+	}
+	m := r.cfg.StepMeta()
+	if m == nil {
+		return nil
+	}
+	if r.ledger.Provider == nil {
+		r.ledger.Provider = &LedgerProvider{}
+	}
+	p := r.ledger.Provider
+	if p.Name == "" {
+		p.Name = m.Name
+	}
+	p.Requests++
+	p.Attempts += m.Attempts
+	p.PromptTokens += m.PromptTokens
+	p.CompletionTokens += m.CompletionTokens
+	p.CostUSD += m.CostUSD
+	return m
 }
 
 // validateToolArgs reports why args cannot be a tool call's arguments: they

@@ -31,6 +31,23 @@ type Turn struct {
 	Signature string    `json:"signature,omitempty"`
 	At        time.Time `json:"at"`
 	Body      Body      `json:"body"`
+	// Provider is what the model provider's harness observed for the model
+	// request that produced this turn (FDR 0021 §4). It is set only on the
+	// FIRST turn of a model reply, so summing over a transcript counts each
+	// request once, and only when Config.StepMeta is set. It is never sent
+	// to a provider.
+	Provider *ProviderMeta `json:"provider,omitempty"`
+}
+
+// ProviderMeta is the provider harness's account of one model request:
+// which provider, how many HTTP attempts it took (retries included), and the
+// usage the provider reported.
+type ProviderMeta struct {
+	Name             string  `json:"name,omitempty"`
+	Attempts         int     `json:"attempts"`
+	PromptTokens     int     `json:"prompt_tokens,omitempty"`
+	CompletionTokens int     `json:"completion_tokens,omitempty"`
+	CostUSD          float64 `json:"cost_usd,omitempty"`
 }
 
 // BodyType discriminates a Body.

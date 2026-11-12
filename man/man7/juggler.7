@@ -268,6 +268,13 @@ One entry per tool call
 .Pq name, declared artifact kind, ok, URIs, error
 plus how the loop ended
 .Pq Ql end_turn , cannot_complete , step_cap , timeout , tool_error , model_error , max_tokens , evaluator_pass .
+When the host wires a model-provider harness
+.Pq Dv Config.StepMeta ,
+the ledger also carries an optional
+.Ql provider
+object (requests, HTTP attempts, token and cost totals as the provider reported them) and the first turn of each model reply a
+.Ql provider
+account of its own request; both are absent otherwise.
 A call's URIs come from the MCP result's
 .Ql structuredContent
 first, then from its content blocks.
