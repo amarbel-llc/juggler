@@ -79,6 +79,32 @@ CLI client
 .Pq list / start / status / stop, with output assertions on the tabwriter columns and key:value status lines .
 All tests share one daemon and serialize via
 .Ev BATS_NO_PARALLELIZE_WITHIN_FILE .
+.It Pa zz-tests_bats/juggler_lifecycle.bats
+Drives the agent-substrate verbs through the built binary against fake
+ringmaster, troupe and systemd-run stand-ins and a fake decisions endpoint:
+no model, no XMPP.
+Its final section, the tests named
+.Ql contract: ,
+pins the argv and stdout that the graph runtime depends on (roustabout's list:
+.Cm spawn Fl -new-run ,
+.Cm spawn Fl -brief Fl -wait ,
+.Cm decide ,
+.Cm resolve ,
+and
+.Fl -juggler ) :
+required stdout keys are present, keys that must be absent are
+(for example
+.Ql pending
+on a successful
+.Fl -new-run ,
+or
+.Ql result
+for a run that did not opt in), and the exit codes hold.
+Additive keys never fail it.
+Select them with
+.Ql bats --filter '^contract:' .
+It pins this binary against that list, not the graphs' behaviour, and not
+the copy of juggler embedded in clown.
 .El
 .Pp
 Wall time: ~2 s. Catches CLI output drift, table formatting bugs,

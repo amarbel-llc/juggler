@@ -1574,3 +1574,225 @@ mint_revokes_for() {
   expect_status 0
   expect_json '([.runs[] | select(.run_key == "rk-clean-sweep")] | length == 0)'
 }
+
+# --- roustabout contract ---------------------------------------------------
+#
+# The argv and stdout the graph runtime (roustabout's adapters, krone's
+# issue-filer and Pebble graphs) depends on, pinned against the REAL binary on
+# the no-model, no-XMPP path above. Select just these with
+#   bats --filter '^contract:' zz-tests_bats/juggler_lifecycle.bats
+# What it pins, per roustabout's list:
+#   1. spawn --new-run --run-key --input F --room-domain --operator-jid [--issuer]
+#   2. spawn --brief F --task F --run-key --wait --timeout Ns [--user]
+#   3. decide --run-key --model --room --parent --min-confidence --question
+#   4. resolve JOB --state=S --reason=R --fallback-artifacts=J (idempotent)
+#   5. --juggler takes one program path
+# It asserts that REQUIRED keys are present and that keys which must be absent
+# are (additive keys never fail it), and exit codes. It pins the standalone
+# against that list, not the graphs' behaviour, and not the embedded copy in
+# clown. Unit tests cover the same shapes in Go (spawn_test.go TestWaitChild).
+
+# expect_has <key>...: every key is present in the last stdout (null counts).
+expect_has() {
+  local k
+  for k in "$@"; do
+    if ! jq -e --arg k "$k" 'has($k)' <<<"$output" >/dev/null; then
+      echo "stdout lacks key \"$k\": $output" >&2
+      return 1
+    fi
+  done
+}
+
+# expect_lacks <key>...: none of the keys is present in the last stdout.
+expect_lacks() {
+  local k
+  for k in "$@"; do
+    if jq -e --arg k "$k" 'has($k)' <<<"$output" >/dev/null; then
+      echo "stdout has key \"$k\" but must not: $output" >&2
+      return 1
+    fi
+  done
+}
+
+# contract_spawn <root> <name> [spawn flags...]: `spawn --brief` the way the
+# graphs call it: the task as a FILE, an explicit --run-key, --user. The same
+# name always means the same task bytes, so a launch and a later --wait name
+# one child.
+contract_spawn() {
+  local root=$1 name=$2
+  shift 2
+  printf 'task %s\n' "$name" >"$BATS_FILE_TMPDIR/ctask-$name"
+  run_jug_as "$root" spawn --brief "$BATS_FILE_TMPDIR/issue-filer.toml" \
+    --task "$BATS_FILE_TMPDIR/ctask-$name" --run-key rk-c1 --user "$@"
+}
+
+@test "contract: spawn --new-run prints the keys the graphs read, with no pending key, and defaults the issuer to CLOWN_SESSION_ID" {
+  printf '%s' '{"recording":"contract"}' >"$BATS_FILE_TMPDIR/contract-input.json"
+  run_jug_env CLOWN_SESSION_ID=issuer-contract -- spawn --new-run --run-key rk-c1 \
+    --input "$BATS_FILE_TMPDIR/contract-input.json" --room-domain rooms.test --operator-jid operator@xmpp.test
+  expect_status 0
+  printf '%s' "$output" >"$BATS_FILE_TMPDIR/rk-c1.json"
+  expect_has existing resolved run_job room root_stanza root_principal root_jid root_credential_ref
+  expect_lacks pending
+  expect_json '.existing == false and .resolved == false and .room == "rk-c1@rooms.test"'
+  # The issuer came from the environment: the run job is on its channel.
+  [[ -f $FAKE_DIR/rm/issuer-contract/$(field .run_job).jsonl ]]
+}
+
+@test "contract: a spawn --new-run that fails after the mint prints the pending object on stdout and exits 1; the retry resumes" {
+  printf '%s' '{"recording":"pending"}' >"$BATS_FILE_TMPDIR/contract-input-3.json"
+  mkdir -p "$FAKE_DIR/fail"
+  : >"$FAKE_DIR/fail/troupe-muc-send"
+  run_jug spawn --new-run --run-key rk-c3 --input "$BATS_FILE_TMPDIR/contract-input-3.json" \
+    --issuer issuer-contract-3 --room-domain rooms.test --operator-jid operator@xmpp.test
+  rm -f "$FAKE_DIR/fail/troupe-muc-send"
+  expect_status 1
+  expect_has run_key pending root_principal room
+  expect_lacks existing run_job
+  expect_json '.pending == true and .run_key == "rk-c3"'
+
+  run_jug spawn --new-run --run-key rk-c3 --input "$BATS_FILE_TMPDIR/contract-input-3.json" \
+    --issuer issuer-contract-3 --room-domain rooms.test --operator-jid operator@xmpp.test
+  expect_status 0
+  expect_has existing resolved run_job
+  expect_lacks pending
+  expect_json '.existing == false and .resumed == true'
+}
+
+@test "contract: spawn --brief --wait prints the always-present keys and exits per state (0 succeeded, 2 failed, 3 aborted, 4 interrupted)" {
+  local root spec name state code job
+  root=$(stored_run rk-c1 .root_principal)
+  for spec in ok:succeeded:0 bad:failed:2 abt:aborted:3 int:interrupted:4; do
+    IFS=: read -r name state code <<<"$spec"
+    contract_spawn "$root" "$name"
+    expect_status 0
+    job=$(field .job)
+    finish_job_later "$root" "$job" "$state" "contract $name"
+    contract_spawn "$root" "$name" --wait --timeout 30s
+    expect_status "$code"
+    expect_has jid job room state reason message ledger artifacts cannot_complete
+    [[ $(field .state) == "$state" ]]
+    [[ $(field .job) == "$job" ]]
+    # No structured result was asked for: none of its keys appear.
+    expect_lacks result result_error transcript_digest
+  done
+}
+
+@test "contract: spawn --wait at the timeout exits 5 with state running when the cancelled job outlives the stop grace" {
+  local root
+  root=$(stored_run rk-c1 .root_principal)
+  contract_spawn "$root" stuck
+  expect_status 0
+  contract_spawn "$root" stuck --wait --timeout 1s --stop-grace 1s
+  expect_status 5
+  expect_has jid job room state reason message ledger artifacts cannot_complete
+  [[ $(field .state) == running ]]
+}
+
+@test "contract: spawn --wait prints result, result_error and transcript_digest from the ledger, only when it has them (a null result is present)" {
+  local root job spool name ledger
+  root=$(stored_run rk-c1 .root_principal)
+  for name in res nul err; do
+    case $name in
+      res) ledger='{"schema":1,"calls":[],"end":{"reason":"end_turn","result":{"findings":[1]}},"cannot_complete":null,"steps":1,"elapsed_ms":1,"transcript_digest":"sha256:abc"}' ;;
+      nul) ledger='{"schema":1,"calls":[],"end":{"reason":"end_turn","result":null},"cannot_complete":null,"steps":1,"elapsed_ms":1}' ;;
+      err) ledger='{"schema":1,"calls":[],"end":{"reason":"end_turn","result_error":"the final message is not valid JSON"},"cannot_complete":null,"steps":1,"elapsed_ms":1}' ;;
+    esac
+    contract_spawn "$root" "r-$name"
+    expect_status 0
+    job=$(field .job)
+    spool="$FAKE_DIR/rm/$root/$job.out"
+    printf '%s' "$ledger" >"$spool"
+    finish_job_later "$root" "$job" succeeded "ok" "$spool"
+    contract_spawn "$root" "r-$name" --wait --timeout 30s
+    expect_status 0
+    case $name in
+      res)
+        expect_has result transcript_digest
+        expect_lacks result_error
+        expect_json '.result == {"findings":[1]} and .transcript_digest == "sha256:abc"'
+        ;;
+      nul)
+        expect_has result
+        expect_lacks result_error transcript_digest
+        expect_json '.result == null'
+        ;;
+      err)
+        expect_has result_error
+        expect_lacks result
+        expect_json '.result_error == "the final message is not valid JSON"'
+        ;;
+    esac
+  done
+}
+
+@test "contract: decide takes the graphs' argv; exit codes and the answers/reason key rules" {
+  local stanza
+  stanza=$(stored_run rk-c1 .root_stanza)
+  # usable: answers, no reason.
+  set_decision 200 "$(decision_body 0.8)"
+  run_jug decide --run-key rk-c1 --model jev --room rk-c1@rooms.test --parent "$stanza" \
+    --min-confidence 0 --question route <<<"$DECIDE_PAYLOAD"
+  expect_status 0
+  expect_has answers
+  expect_lacks reason
+  # below the threshold: answers AND a reason.
+  run_jug decide --run-key rk-c1 --model jev --room rk-c1@rooms.test --parent "$stanza" \
+    --min-confidence 0.95 --question route <<<"$DECIDE_PAYLOAD"
+  expect_status 4
+  expect_has answers reason
+  # the endpoint fails: a reason, no answers.
+  set_decision 500 '{"error":{"message":"upstream down"}}'
+  run_jug decide --run-key rk-c1 --model jev --room rk-c1@rooms.test --parent "$stanza" \
+    --min-confidence 0 --question route <<<"$DECIDE_PAYLOAD"
+  expect_status 2
+  expect_has reason
+  expect_lacks answers
+  # usage error before any call.
+  run_jug decide --model jev --parent x <<<"$DECIDE_PAYLOAD"
+  expect_status 1
+}
+
+@test "contract: resolve takes the job first and --flag=value forms, prints the outcome keys, and a second call is a no-op (job last also parses)" {
+  printf '%s' '{"recording":"resolve"}' >"$BATS_FILE_TMPDIR/contract-input-2.json"
+  run_jug_env CLOWN_SESSION_ID=issuer-contract-2 -- spawn --new-run --run-key rk-c2 \
+    --input "$BATS_FILE_TMPDIR/contract-input-2.json" --room-domain rooms.test --operator-jid operator@xmpp.test
+  expect_status 0
+  local job
+  job=$(field .run_job)
+
+  run_jug resolve "$job" --state=failed --reason='{"why":"contract check","n":1}' \
+    --fallback-artifacts='[{"tool":"orgzly_note","kind":"note","uris":["orgzly://note/9"]}]' --stop-grace=1s
+  expect_status 0
+  expect_has run_job state reason already_resolved torn_down teardown
+  expect_json '.already_resolved == false and .state == "failed" and .reason == "failed" and .torn_down == true'
+  # Teardown entries: ok is the torn-down/unclean bit, with the account named.
+  expect_json '(.teardown | length) >= 1 and all(.teardown[]; .tool == "teardown" and ((.ok | type) == "boolean") and has("principal") and has("jid"))'
+
+  run_jug resolve "$job" --state=failed --reason=again
+  expect_status 0
+  expect_json '.already_resolved == true'
+  [[ $stderr == *"already resolved"* ]]
+
+  run_jug resolve --state=failed --reason=again "$job"
+  expect_status 0
+  expect_json '.already_resolved == true'
+}
+
+@test "contract: --juggler takes one program path and the unit runs it" {
+  local root unit
+  root=$(stored_run rk-c1 .root_principal)
+  contract_spawn "$root" jug --juggler /opt/contract/juggler
+  expect_status 0
+  unit=$(fake_calls '[.[] | select(.tool == "systemd-run")][-1]')
+  jq -e '(.argv | index("/opt/contract/juggler")) as $i | $i != null and .argv[$i + 1] == "run"' <<<"$unit" >/dev/null
+  jq -e '[.argv[] | select(startswith("--property=ExecStopPost="))][0] | contains("/opt/contract/juggler exit-wake --job")' <<<"$unit" >/dev/null
+}
+
+@test "contract: an unknown flag is a usage error (exit 1) for spawn, decide and resolve" {
+  local verb
+  for verb in spawn decide resolve; do
+    run_jug "$verb" --not-a-flag </dev/null
+    expect_status 1
+  done
+}
