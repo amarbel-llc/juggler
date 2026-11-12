@@ -47,7 +47,8 @@ for row in "${SCENARIOS[@]}"; do
   IFS='|' read -r name _ code recorded <<<"$row"
   [[ $recorded == 1 ]] || continue
   record_scenario "$name" "$scratch/w-$name" "$out"
-  [[ -s $out/$name/stdout ]] || { echo "case $name recorded no stdout" >&2; exit 1; }
+  # a failure may print only to stderr; a case with neither recorded nothing
+  [[ -s $out/$name/stdout || -s $out/$name/stderr ]] || { echo "case $name recorded no output" >&2; exit 1; }
   [[ $(<"$out/$name/rc") == "$code" ]] || { echo "case $name exited $(<"$out/$name/rc"), want $code" >&2; exit 1; }
   n=$((n + 1))
 done

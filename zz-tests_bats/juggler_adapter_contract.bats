@@ -104,7 +104,7 @@ setup() {
     record_scenario "$name" "$BATS_TEST_TMPDIR/a-$name" "$BATS_TEST_TMPDIR/out-a"
     record_scenario "$name" "$BATS_TEST_TMPDIR/b-$name" "$BATS_TEST_TMPDIR/out-b"
     # not vacuous: the case holds real output and the exit code it is named for
-    [[ -s $BATS_TEST_TMPDIR/out-a/$name/stdout ]] || { echo "case $name recorded no stdout" >&2; return 1; }
+    [[ -s $BATS_TEST_TMPDIR/out-a/$name/stdout || -s $BATS_TEST_TMPDIR/out-a/$name/stderr ]] || { echo "case $name recorded no output" >&2; return 1; }
     [[ $(<"$BATS_TEST_TMPDIR/out-a/$name/rc") == "$code" ]] || { echo "case $name recorded exit $(<"$BATS_TEST_TMPDIR/out-a/$name/rc"), want $code" >&2; return 1; }
     if ! diff -r "$BATS_TEST_TMPDIR/out-a/$name" "$BATS_TEST_TMPDIR/out-b/$name" >&2; then
       echo "case $name differs between two fresh worlds after normalisation" >&2
