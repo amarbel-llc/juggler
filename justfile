@@ -170,6 +170,27 @@ debug-godyn-go-scratch:
     nix run --inputs-from . igloo#godyn-go -- -m .tmp/scratch-go.nix -- go generate -run dagnabit ./...
     diff go.nix .tmp/scratch-go.nix || true
 
+# Vendors roustabout's juggler adapter contract file into the bats lane
+# (zz-tests_bats/contract/) byte for byte and records where it came from in the
+# sidecar: `roustabout <commit> sha256:<hex>`. The lane recomputes the digest, so
+# a hand edit of the copy fails; re-run this to take a new version. The nix gate
+# cannot read roustabout's repo, which is why the copy exists; a flake input
+# later removes it. SRC is the file in a roustabout checkout (internal/charlie/
+# adapters/testdata/juggler-adapter.contract.json), COMMIT the roustabout commit
+# it was read at (check the checkout is clean at that commit first).
+#
+# vendor roustabout's adapter contract file into the bats lane
+[group('debug')]
+debug-sync-contract src commit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p zz-tests_bats/contract
+    cp "{{ src }}" zz-tests_bats/contract/roustabout-adapter.json
+    printf 'roustabout %s sha256:%s\n' "{{ commit }}" \
+      "$(sha256sum zz-tests_bats/contract/roustabout-adapter.json | cut -d' ' -f1)" \
+      >zz-tests_bats/contract/roustabout-adapter.source
+    cat zz-tests_bats/contract/roustabout-adapter.source
+
 # One-shot after the NATO relayout: comments, man pages and the FDR named
 # packages as internal/<leaf>; levels move, so name them internal/*/<leaf> (the
 # dagnabit(7) convention). Skips pkgs/ (generated; regenerate it with `just

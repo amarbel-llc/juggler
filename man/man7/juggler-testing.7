@@ -105,6 +105,39 @@ Select them with
 .Ql bats --filter '^contract:' .
 It pins this binary against that list, not the graphs' behaviour, and not
 the copy of juggler embedded in clown.
+.It Pa zz-tests_bats/juggler_adapter_contract.bats
+Runs roustabout's juggler adapter contract file
+.Pq Pa zz-tests_bats/contract/roustabout-adapter.json ,
+a schema-1 JSON file roustabout owns, against the built binary.
+The file lists, per verb, the argv the adapter builds, the stdout keys it
+reads (with types and the exit codes at which each must be present or absent)
+and the exit codes it expects.
+For every listed (verb, exit code) the runner
+.Pq Pa lib/adapter.bash
+runs each matching scenario in a fresh fake platform world
+.Pq Pa lib/world.bash ,
+with and without the optional argv groups, and checks the exit code and the
+key rules.
+A listed exit code with no scenario, or an undeclared placeholder, fails.
+The vendored copy carries a sidecar
+.Pq Pa roustabout-adapter.source
+naming the roustabout commit and the file's sha256; the lane recomputes the
+digest, so an edited copy fails.
+Refresh it with
+.Cm just debug-sync-contract .
+The test named
+.Ql byte-stable
+runs each recorded scenario in two fresh worlds and compares the cases
+after
+.Pa lib/normalise.jq
+(ids renumbered by first appearance, world paths scrubbed).
+Limits: the
+.Cm spawn Fl -wait
+cases are real juggler output over ledgers the test seeds
+.Pq systemd never runs the unit ,
+and the
+.Cm decide
+answers come from the fake decisions endpoint.
 .El
 .Pp
 Wall time: ~2 s. Catches CLI output drift, table formatting bugs,
