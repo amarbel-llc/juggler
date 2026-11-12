@@ -72,6 +72,11 @@ type AgentDeps struct {
 	// reachable by the agent's own tool calls (clown#255 delta review finding
 	// 2). Nil disables traffic entirely.
 	TrafficPath func(principal, job string) string
+	// TranscriptPath, when set, returns where the run's transcript is stored
+	// (Store.TranscriptPath matches this signature). Nil means the transcript
+	// is not persisted, and then the ledger carries no transcript_digest and a
+	// note says so.
+	TranscriptPath func(principal, job string) string
 	// AcquireJobLock takes the ringmaster producer's advisory lock on the
 	// job for the run's whole lifetime (RFC-0018 §2; clown#256). The unit's
 	// exit-wake hook is the first-line backstop for every unit; this lock
@@ -147,7 +152,10 @@ type AgentOutcome struct {
 	// agent's tool-reachable state directory. Empty when AgentDeps.TrafficPath
 	// is nil, or the file could not be opened.
 	TrafficPath string
-	Ledger      jugglerloop.Ledger
+	// TranscriptPath is the persisted transcript's path (FDR 0023); empty when
+	// it was not persisted. Ledger.TranscriptDigest is the digest of that file.
+	TranscriptPath string
+	Ledger         jugglerloop.Ledger
 	// ConfigError: the brief does not fit the tool plane (an allowlisted
 	// tool moxy does not advertise). The job is still terminalized failed,
 	// but the process exits 1.
@@ -409,6 +417,7 @@ func RunAgent(ctx context.Context, deps AgentDeps, req AgentRequest) (AgentOutco
 		// An invalid loop config (e.g. a style with no codec): nothing ran.
 		return a.finishWithoutLoop(jugglerloop.EndModelError, "model_error: "+runErr.Error()), nil
 	}
+	a.transcriptPath = a.persistTranscript(&res)
 
 	holderCancelled := res.End == jugglerloop.EndTimeout && runErr != nil
 	if cancelObserved.Load() {
@@ -459,6 +468,8 @@ type agentRun struct {
 	// opened" note, which means a safe id still failed to open the file
 	// (clown#255 delta review round 2, finding 2).
 	trafficDisabledNote string
+	// transcriptPath is the persisted transcript's path, empty unless stored.
+	transcriptPath string
 }
 
 func (a *agentRun) logf(format string, args ...any) {
@@ -591,7 +602,7 @@ func (a *agentRun) finish(state, message string, l jugglerloop.Ledger) AgentOutc
 	case a.deps.TrafficPath != nil && a.trafficPath == "":
 		l.Notes = append(l.Notes, "traffic.jsonl could not be opened; no tool-call arguments were recorded for this run")
 	}
-	out := AgentOutcome{Job: a.job, State: state, Message: message, Ledger: l, TrafficPath: a.trafficPath}
+	out := AgentOutcome{Job: a.job, State: state, Message: message, Ledger: l, TrafficPath: a.trafficPath, TranscriptPath: a.transcriptPath}
 	if doc, err := marshalDocument(l); err != nil {
 		a.logf("marshal ledger: %v", err)
 	} else if path, err := writeSpool(ctx, a.deps.Ringmaster, a.target, a.job, doc); err != nil {

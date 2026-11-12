@@ -22,6 +22,10 @@ func TestTranscriptDigest_LedgerNamesTheTurnLog(t *testing.T) {
 	if got := TranscriptDigest(res.Transcript); got != d {
 		t.Errorf("recomputed %s != ledger %s", got, d)
 	}
+	// The ledger digest is the digest of the persisted bytes the result carries.
+	if got := DigestBytes(res.TranscriptJSON); got != d {
+		t.Errorf("digest of TranscriptJSON %s != ledger %s", got, d)
+	}
 	if got := TranscriptDigest(res.Transcript); got != d {
 		t.Error("the digest must be deterministic")
 	}

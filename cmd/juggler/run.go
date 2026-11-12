@@ -186,6 +186,9 @@ type runOutcomeJSON struct {
 	// Traffic is traffic.jsonl's path (clown#255), empty if it could not be
 	// opened. See jr.AgentOutcome.TrafficPath.
 	Traffic string `json:"traffic,omitempty"`
+	// Transcript is the persisted transcript's path (FDR 0023), empty when it
+	// was not stored; the ledger's transcript_digest is the digest of that file.
+	Transcript string `json:"transcript,omitempty"`
 }
 
 // cmdRun is `juggler run`, the agent (FDR 0019 §1, §6). ctx is cancelled on
@@ -237,6 +240,7 @@ func cmdRun(ctx context.Context, resolve func(context.Context, string) (rm.Resol
 			MoxyCLI:        jr.ExecMoxyCLI{Bin: resolveBin(moxyBin, jr.MoxyBinEnv, MoxyPath, "moxy")},
 			AgentStateDir:  deps.Store.AgentStateDir(brief.Principal),
 			TrafficPath:    deps.Store.TrafficPath,
+			TranscriptPath: deps.Store.TranscriptPath,
 			AcquireJobLock: jobwake.AcquireJobLock,
 		}, jr.AgentRequest{
 			Brief:        brief,
@@ -249,7 +253,7 @@ func cmdRun(ctx context.Context, resolve func(context.Context, string) (rm.Resol
 		if err != nil {
 			return fail(stderr, "run", err)
 		}
-		printJSON(stdout, runOutcomeJSON{Job: out.Job, State: out.State, Message: out.Message, Ledger: out.LedgerPath, Traffic: out.TrafficPath})
+		printJSON(stdout, runOutcomeJSON{Job: out.Job, State: out.State, Message: out.Message, Ledger: out.LedgerPath, Traffic: out.TrafficPath, Transcript: out.TranscriptPath})
 		return out.ExitCode()
 	})
 }

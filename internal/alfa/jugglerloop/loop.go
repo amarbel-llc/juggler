@@ -122,8 +122,12 @@ type Config struct {
 // Result is what a run recorded. The loop never decides success.
 type Result struct {
 	Transcript Transcript
-	Ledger     Ledger
-	End        EndReason
+	// TranscriptJSON is the transcript in its persisted form (PersistTranscript):
+	// the bytes Ledger.TranscriptDigest is the digest of. A host that stores the
+	// transcript stores exactly these.
+	TranscriptJSON []byte
+	Ledger         Ledger
+	End            EndReason
 }
 
 type run struct {
@@ -195,8 +199,9 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	r.append(terminalBodyWithResult(end, result, resultErr), r.lastTurnID)
 	r.ledger.End = LedgerEnd{Reason: end, Result: result, ResultError: resultErr}
 	r.ledger.ElapsedMS = cfg.Now().Sub(start).Milliseconds()
-	r.ledger.TranscriptDigest = TranscriptDigest(r.transcript)
-	return Result{Transcript: r.transcript, Ledger: r.ledger, End: end}, runErr
+	doc := PersistTranscript(r.transcript)
+	r.ledger.TranscriptDigest = DigestBytes(doc)
+	return Result{Transcript: r.transcript, TranscriptJSON: doc, Ledger: r.ledger, End: end}, runErr
 }
 
 func (c Config) withDefaults() (Config, error) {

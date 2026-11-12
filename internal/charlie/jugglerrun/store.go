@@ -104,6 +104,18 @@ func (s Store) TrafficPath(principal, job string) string {
 	return filepath.Join(s.Root, "traffic", principal, job+".jsonl")
 }
 
+// TranscriptPath is a run's persisted transcript (FDR 0023): <root>/
+// transcripts/<principal>/<job>.json, a sibling of the traffic tree with the
+// same keying, the same safe-segment rule ("" for an unsafe principal or job)
+// and the same retention (`juggler clean --resolved`). Outside AgentStateDir,
+// for the reason TrafficPath is.
+func (s Store) TranscriptPath(principal, job string) string {
+	if !idPattern.MatchString(principal) || !idPattern.MatchString(job) {
+		return ""
+	}
+	return filepath.Join(s.Root, "transcripts", principal, job+".json")
+}
+
 // stagedParentMoxyfilePath is a child's parent reference (the spawner's
 // effective moxyfile); stagedChildMoxyfilePath the brief's moxyfile as
 // `moxy narrows` checks it.

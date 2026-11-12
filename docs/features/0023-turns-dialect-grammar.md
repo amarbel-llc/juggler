@@ -229,8 +229,8 @@ fields the operator accepted for `provider`; `future` follows the same rule).
   (`LedgerCall`, plus optional `future`, `args_digest`).
 - *A stable handle or digest for a run's turn log.* FDR 0022 handles are
   **per tool call**, not per run, so they are not that. `ledger.transcript_digest`
-  is (built; *Open questions*, 5), with the limit that the transcript is not
-  stored by juggler (question 8).
+  is (built; *Open questions*, 5), the digest of the stored transcript file
+  (question 8, built); `spawn --wait` also prints the file's `transcript` path.
 
 ## Examples
 
@@ -303,24 +303,48 @@ the ceilings is refused.
    tests (the ruling asked for tests first).
 5. **ACCEPTED and BUILT (operator, 2026-11-12, Q23): a run transcript digest**,
    additive, schema stays 1. Shape: `ledger.transcript_digest` =
-   `sha256:<hex>` of the finished transcript's JSON as `encoding/json` marshals
-   it (every turn, terminal included; deterministic), exported as
-   `jugglerloop.TranscriptDigest(Transcript)` so a holder of the turns can
-   recompute it. **Limit, stated plainly:** juggler does not persist the
-   transcript; the turns go to the run's room (oversized ones truncated there)
-   and the journal as they happen. The digest therefore names the turn log and
-   can be verified only by someone who holds the whole transcript (for example,
-   by collecting `OnTurn` in-process). *New question 8 below.*
+   `sha256:<hex>` (the algorithm is named by the prefix; `jugglerloop.
+   DigestAlgorithm` is the one place to change it) of the **stored transcript
+   file's exact bytes**, exported as `jugglerloop.TranscriptDigest(Transcript)`
+   and `DigestBytes`. **Redefined by question 8's ruling:** the form first merged
+   (ef32dee) hashed the in-memory transcript JSON, which no file backed; the
+   value is the same for a transcript with nothing over the caps and differs
+   only when a body was truncated. See question 8 for the file.
 6. **DEFERRED (operator, 2026-11-12, Q24): per-step tool offering is NOT built
    yet**; the dialect (the pinned, versioned document and its envelope) comes
    first. Recorded here as deferred; §2 keeps it as the one new capability.
-8. **Operator: persist the transcript so the digest can be verified?** Write the
-   canonical transcript next to the ledger (a second spool file named by the
-   digest), so `ledger.transcript_digest` resolves to bytes. Recommendation: yes,
-   as its own change; transcripts hold tool results (possibly large or sensitive),
-   so it needs a size/retention rule first. Not built.
 7. **Numbering.** juggler's FDR 0023 and roustabout's file carry the shared slug
    `grammar-dialects`; others' records are not renumbered.
+8. **RESOLVED and BUILT (operator, 2026-11-12, "#1 but use blake2b if possible";
+   cap and retention confirmed by the coordinator): the transcript is
+   persisted.**
+   - **Where:** `$XDG_STATE_HOME/juggler/transcripts/<principal>/<job>.json`,
+     beside `traffic/`; directory 0700, file 0600, written atomically
+     (`writeFileAtomic`); outside the agent's tool-reachable state directory.
+     `juggler run` prints `transcript` (the path) and `spawn --wait` prints it
+     too when the file exists. The ledger's `transcript_digest` is the digest of
+     these exact bytes.
+   - **Size cap:** a body (text, tool_call args, tool_result content) over 64 KiB
+     is replaced by `{"truncated":true,"sha256":"<hex of the original>",
+     "bytes":N}`, so the omitted bytes stay attested; once the document passes
+     8 MiB every further body becomes such a marker. The turn skeletons and the
+     terminal turn are always kept, so the sequence is complete. (The numbers are
+     a judgment, not measured on real transcripts; both are constants in
+     `jugglerloop`.)
+   - **Retention:** the existing `juggler clean --resolved` sweep, with the traffic
+     file: default `--resolved-older-than` 30 days. After it the digest cannot be
+     checked against a file; that is documented.
+   - **Write failure or no path:** `transcript_digest` is omitted and a ledger note
+     "transcript not persisted: <why>" says so (an unbacked digest would imply a
+     verifiability that is not there).
+   - **blake2b:** NOT done. The operator's remark waits for the shared grammar
+     module: blake2b fleet-wide should arrive once, with that module, via the
+     piggy `markl-id` library route, which is a `flake.lock` change needing the
+     operator's approval. Until then sha256; the algorithm is named by the
+     digest string's prefix (`sha256:<hex>`; a markl form would be
+     `blake2b256-<blech32>`), so the switch is a change to `DigestAlgorithm` and
+     `DigestBytes`, and readers must treat an unknown prefix as "cannot verify".
+     Every other digest in juggler and in the shared-core contract is sha256 today.
 
 ## More Information
 

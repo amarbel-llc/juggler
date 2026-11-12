@@ -310,6 +310,16 @@ func cleanResolvedRun(ctx context.Context, deps LifecycleDeps, run *RunRecord, a
 			// lives there, or a concurrent sweep got to it first.
 			_ = os.Remove(filepath.Dir(traffic))
 		}
+		// The persisted transcript (FDR 0023) is audit material of the same
+		// class as traffic.jsonl and goes with it, counted in the same
+		// "staged/traffic" tally; after this sweep its ledger digest can no
+		// longer be verified.
+		transcript := deps.Store.TranscriptPath(child.Principal, child.Job)
+		beforeRemoved = removed
+		sweep(transcript)
+		if act && removed > beforeRemoved {
+			_ = os.Remove(filepath.Dir(transcript))
+		}
 	}
 	switch {
 	case !act:

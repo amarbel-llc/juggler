@@ -580,8 +580,8 @@ The moxyfile is written under
 .Pa agents/<principal>/
 in the state directory.
 Prints one JSON object
-.Sy {"job","state","message","ledger","traffic"}
-.Pq Ql traffic No present only when Pa traffic.jsonl No was actually opened; see Sx FILES
+.Sy {"job","state","message","ledger","traffic","transcript"}
+.Pq Ql traffic No present only when Pa traffic.jsonl No was actually opened, Ql transcript No only when the transcript was stored; see Sx FILES
 and exits with the state: 0
 .Ql succeeded ,
 2
@@ -997,7 +997,7 @@ The consumed binaries; see
 With
 .Fl -wait ,
 prints
-.Sy {"jid","job","room","state","reason","message","ledger","traffic","artifacts":[{"tool","kind","uris"}],"cannot_complete":null|{"reason"},"result","result_error","transcript_digest"} .
+.Sy {"jid","job","room","state","reason","message","ledger","traffic","transcript","artifacts":[{"tool","kind","uris"}],"cannot_complete":null|{"reason"},"result","result_error","transcript_digest"} .
 .Ql result ,
 .Ql result_error
 and
@@ -1297,7 +1297,9 @@ child's staged files
 .Pq brief.toml, moxyfile.toml and parent-moxyfile.toml
 and
 .Ql traffic.jsonl
-file, neither of which
+file and persisted transcript
+.Pq FDR 0023; once swept, the ledger's Ql transcript_digest No can no longer be checked against a file ,
+none of which
 .Cm resolve
 touches; a still-running child, or one whose journal could not even be
 read, is skipped entirely
@@ -1665,6 +1667,27 @@ tears the account down, or, for a pending run's root past its age
 guard, by
 .Cm clean Fl -act
 (clown#250).
+.It Pa $XDG_STATE_HOME/juggler/transcripts/<principal>/<job>.json
+.Pq FDR 0023
+The run's transcript, written once by
+.Cm run
+when it ends, mode 0600 in a 0700 directory, outside
+.Pa agents/<principal>/
+for the same reason as the traffic file.
+The ledger's
+.Ql transcript_digest
+is the digest
+.Pq Ql sha256: and the hex SHA-256
+of exactly these bytes, so the file can be hashed and compared.
+A body over 64 KiB, and every body once the file passes 8 MiB, is replaced by
+{"truncated":true,"sha256":"<hex of the original>","bytes":N}; the turn sequence
+stays complete.
+Not written when no path is configured or the write fails; the ledger then
+carries no
+.Ql transcript_digest
+and a note says why.
+Swept with the traffic file by
+.Cm clean Fl -resolved .
 .It Pa $XDG_STATE_HOME/juggler/agents/<principal>/moxyfile
 An agent's moxyfile, and the working directory of its moxy.
 .It Pa $XDG_STATE_HOME/juggler/traffic/<principal>/<job>.jsonl

@@ -6,7 +6,6 @@ package jugglerloop
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"time"
@@ -115,20 +114,6 @@ func TerminalBody(reason EndReason) Body {
 // there is none).
 func terminalBodyWithResult(reason EndReason, result json.RawMessage, resultErr string) Body {
 	return Body{Type: BodyTerminal, Terminal: &Terminal{Reason: reason, Result: result, ResultError: resultErr}}
-}
-
-// TranscriptDigest names a transcript: "sha256:" and the hex SHA-256 of its
-// JSON as encoding/json marshals it (struct field order, sorted map keys, no
-// added whitespace), which is deterministic for a given Transcript value. The
-// digest covers every turn, timestamps and provider metadata included, so it
-// identifies one run's turn log, not a class of runs.
-func TranscriptDigest(t Transcript) string {
-	b, err := json.Marshal(t)
-	if err != nil {
-		return ""
-	}
-	sum := sha256.Sum256(b)
-	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
 // NewRandomTurnID returns a 128-bit random hex id, the default turn id

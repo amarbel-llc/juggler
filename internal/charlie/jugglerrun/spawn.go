@@ -831,7 +831,11 @@ type WaitRecord struct {
 	// Ledger from the child's own principal and job — never recorded in the
 	// journal itself. Empty when the file was never opened (the facility
 	// disabled, or the agent died before opening it).
-	Traffic        string                      `json:"traffic,omitempty"`
+	Traffic string `json:"traffic,omitempty"`
+	// Transcript is the persisted transcript's path (FDR 0023), derived like
+	// Traffic from the child's principal and job and reported only when the
+	// file exists; transcript_digest is the digest of its bytes.
+	Transcript     string                      `json:"transcript,omitempty"`
 	Artifacts      []Artifact                  `json:"artifacts"`
 	CannotComplete *jugglerloop.CannotComplete `json:"cannot_complete"`
 	// Result, ResultError and TranscriptDigest are read from the ledger's end
@@ -924,6 +928,7 @@ func WaitChild(ctx context.Context, deps LifecycleDeps, rec *ChildRecord, timeou
 	// fallback above doesn't mean the agent ever got as far as opening its
 	// traffic file. Report the path only if it exists.
 	out.Traffic = trafficPathIfExists(deps.Store.TrafficPath(rec.Principal, rec.Job))
+	out.Transcript = trafficPathIfExists(deps.Store.TranscriptPath(rec.Principal, rec.Job))
 	if found {
 		out.Artifacts = ArtifactsFromLedger(l)
 		out.CannotComplete = l.CannotComplete

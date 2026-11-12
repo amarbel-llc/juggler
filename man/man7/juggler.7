@@ -296,13 +296,24 @@ A run that does not opt in, or ends any other way, carries neither field.
 The ledger also carries
 .Ql transcript_digest :
 .Ql sha256:
-and the hex SHA-256 of the finished transcript's JSON as
+and the hex SHA-256 of the stored transcript file's exact bytes, a stable name
+for the run's turn log that a consumer can cite and check by hashing the file
+.Pq Pa transcripts/<principal>/<job>.json , see Xr juggler 1 .
+The stored form is the transcript's JSON as
 .Xr encoding/json 3
-marshals it (terminal turn included), a stable name for the run's turn log that a
-consumer can cite.
-The loop does not store the transcript, only this digest; it identifies one run's
-turn sequence, timestamps and provider metadata included.
-It is absent for a run whose loop never started.
+marshals it, terminal turn included, except that a body over 64 KiB, and every
+body once the file passes 8 MiB, is replaced by a
+{"truncated":true,"sha256":"<hex of the original>","bytes":N} marker, so the
+omitted bytes stay attested and the turn sequence stays complete.
+It identifies one run's turn sequence, timestamps and provider metadata included.
+The algorithm is named by the string's prefix.
+It is absent when the transcript was not stored
+.Pq no path configured, or the write failed; a ledger note says why
+and for a run whose loop never started, and it cannot be checked after
+.Cm juggler clean Fl -resolved
+has swept the file.
+This redefines the digest first merged, which hashed the in-memory transcript:
+the value is the same for a transcript with nothing over the caps.
 A call's URIs come from the MCP result's
 .Ql structuredContent
 first, then from its content blocks.
