@@ -74,6 +74,10 @@ type LedgerCall struct {
 	// entry to its traffic.jsonl line without the ledger carrying the
 	// arguments themselves.
 	ArgsDigest string `json:"args_digest"`
+	// Future is the loop-owned future's id when the call outran the loop's
+	// call wait and was parked (FDR 0022): OK/URIs/Error then reflect how it
+	// finally ended, settled in place. Absent for a call answered in time.
+	Future string `json:"future,omitempty"`
 }
 
 type LedgerEnd struct {

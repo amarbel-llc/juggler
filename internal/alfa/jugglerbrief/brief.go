@@ -170,6 +170,16 @@ type Limits struct {
 	// WallClock is a Go duration string; DefaultWallClock when unset.
 	WallClock string `toml:"wall_clock"`
 
+	// CallWait is a Go duration string: how long the loop waits on one tool
+	// call before parking it as a future the model can await or cancel
+	// (FDR 0022). Empty means the loop's default (30s).
+	CallWait string `toml:"call_wait,omitempty"`
+
+	// AbandonTools lists tools (each one of `tools`) whose call past CallWait
+	// is cancelled and answered as an error, instead of being parked as a
+	// future: the per-tool flag for a tool that must not outlive its deadline.
+	AbandonTools []string `toml:"abandon_tools,omitempty"`
+
 	// Sandbox is RESERVED and UNUSED in this slice (FDR 0019 §9). Any TOML
 	// value is accepted and preserved verbatim so that per-brief unit
 	// properties can land here later without reshaping the brief.
@@ -180,6 +190,15 @@ type Limits struct {
 // Brief returned by Parse.
 func (l Limits) WallClockDuration() (time.Duration, error) {
 	return time.ParseDuration(l.WallClock)
+}
+
+// CallWaitDuration returns the parsed call wait, or 0 when unset (the loop
+// then applies its own default).
+func (l Limits) CallWaitDuration() (time.Duration, error) {
+	if l.CallWait == "" {
+		return 0, nil
+	}
+	return time.ParseDuration(l.CallWait)
 }
 
 // Parse decodes TOML bytes into a Brief, applies limit defaults and validates.
@@ -317,6 +336,18 @@ func (b *Brief) validate(template bool) error {
 	}
 	if d <= 0 {
 		return fmt.Errorf("jugglerbrief: limits.wall_clock: must be positive, got %q", b.Limits.WallClock)
+	}
+	cw, err := b.Limits.CallWaitDuration()
+	if err != nil {
+		return fmt.Errorf("jugglerbrief: limits.call_wait: invalid duration %q: %w", b.Limits.CallWait, err)
+	}
+	if b.Limits.CallWait != "" && cw <= 0 {
+		return fmt.Errorf("jugglerbrief: limits.call_wait: must be positive, got %q", b.Limits.CallWait)
+	}
+	for _, name := range b.Limits.AbandonTools {
+		if !seen[name] {
+			return fmt.Errorf("jugglerbrief: limits.abandon_tools: %q is not in tools", name)
+		}
 	}
 	return nil
 }

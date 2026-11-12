@@ -373,7 +373,19 @@ func RunAgent(ctx context.Context, deps AgentDeps, req AgentRequest) (AgentOutco
 			return deps.Evaluate(ctx, b.Evaluator.Kind, b.Evaluator.Program, ledger)
 		}
 	}
+	// Futures are the default for a juggler agent (FDR 0022): a call past
+	// limits.call_wait is parked, not abandoned, unless the brief lists the
+	// tool under limits.abandon_tools. The brief was validated, so the
+	// duration parses.
+	callWait, _ := b.Limits.CallWaitDuration()
+	abandon := map[string]bool{}
+	for _, name := range b.Limits.AbandonTools {
+		abandon[name] = true
+	}
 	res, runErr := jugglerloop.Run(runCtx, jugglerloop.Config{
+		Futures:      true,
+		CallWait:     callWait,
+		AbandonTools: abandon,
 		StopWhen:     stopWhen,
 		HTTPClient:   deps.HTTPClient,
 		Resolved:     resolved,

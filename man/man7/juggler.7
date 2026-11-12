@@ -288,15 +288,38 @@ blob link
 included.
 Each
 .Ql tools/call
-the agent makes to its moxy runs under juggler's own per-call deadline of 30 seconds
-.Pq Dv DefaultCallTimeout No in the tool-plane client ;
-it is not a moxy setting and is not configurable per brief.
-A call that outruns it is abandoned and answered to the model as an
+the agent makes to its moxy is a future the loop owns
+.Pq FDR 0022 .
+The loop waits
+.Ql limits.call_wait
+(default 30 seconds; juggler's own setting, not moxy's) for the call.
+A call that outruns the wait is NOT abandoned: the work keeps running, and the
+model is answered with a handle,
+.Ql {"state":"waiting","future":"f-1"} .
+It may then call
+.Ql future_await
+.Pq Ql future ,
+optional
+.Ql timeout_ms
+to wait again and get the real result, or
+.Ql future_cancel
+to stop it (best effort); it cannot reach any future the run did not start.
+A retry is therefore an await, not a second run.
+The call's ledger entry carries the
+.Ql future
+id and is settled in place when the work ends, so its artifacts reach the
+ledger even if the model never awaits; futures still running when the run ends
+are cancelled and recorded as such.
+A tool listed in
+.Ql limits.abandon_tools
+keeps the older behaviour: past the wait its call is cancelled and answered as an
 .Ql isError
-tool result, the same as a tool's own failure, so the model may retry or narrow
-the request; the run does not end.
-The abandoned call may still be running upstream, so a retry of a
-non-idempotent tool can run it twice.
+tool result, so the model may retry or narrow the request, and the abandoned
+call may still be running upstream, so a retry of a non-idempotent tool can run
+it twice.
+The client's own per-request timeout on a
+.Ql tools/call
+is a one-hour backstop; the run's wall clock bounds every call.
 Only the run's own wall clock or cancellation ends the run as
 .Ql timeout ,
 and a transport fault the model cannot act on

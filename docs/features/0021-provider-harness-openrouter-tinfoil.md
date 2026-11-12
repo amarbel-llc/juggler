@@ -105,7 +105,8 @@ does not import this package) it lands in two places: `Ledger.Provider`
 `model_error` run still shows what it cost) and `Turn.Provider` on the FIRST
 turn of each model reply (so summing a transcript counts each request once).
 Both are absent unless `StepMeta` is set, so a run without a provider harness
-serialises exactly as before; `LedgerSchema` stays 1 (an optional field). `juggler run`
+serialises exactly as before; `LedgerSchema` stays 1 (an optional field; the
+operator accepted it as such, 2026-11-12). `juggler run`
 does not wire it yet (the `provider` registry key is the next step). A retry never re-issues a *tool*
 call; it repeats the model request only, and a request that reached the
 provider but whose response was lost is retried as a new, idempotent-by-

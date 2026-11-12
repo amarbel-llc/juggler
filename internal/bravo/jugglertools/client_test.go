@@ -221,6 +221,32 @@ func TestCallTimeout(t *testing.T) {
 	}
 }
 
+// WithToolCallTimeout governs tools/call only: initialize and tools/list keep
+// the per-request timeout.
+func TestToolCallTimeoutIsSeparate(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+		case <-time.After(500 * time.Millisecond):
+		}
+	}))
+	defer srv.Close()
+	c := New(srv.URL, WithCallTimeout(50*time.Millisecond), WithToolCallTimeout(10*time.Second))
+	start := time.Now()
+	if _, err := c.ListTools(context.Background()); err == nil {
+		t.Error("tools/list must keep the short per-request timeout")
+	}
+	if time.Since(start) > 2*time.Second {
+		t.Error("tools/list timeout not honoured")
+	}
+	// tools/call is on the long timeout: the 500 ms handler answers an empty
+	// body first, which is a protocol error, not a deadline.
+	_, isErr, _ := c.Call(context.Background(), "t", nil)
+	if isErr {
+		t.Error("tools/call must not hit the short timeout")
+	}
+}
+
 // A run context that is cancelled or past its own deadline is not the
 // per-call deadline: Call returns the error so the loop ends the run.
 func TestCallRunContextDoneStaysAnError(t *testing.T) {

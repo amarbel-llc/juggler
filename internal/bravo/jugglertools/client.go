@@ -78,6 +78,18 @@ func WithCallTimeout(d time.Duration) Option {
 	}
 }
 
+// WithToolCallTimeout sets the timeout for tools/call alone, leaving initialize
+// and tools/list on the per-request timeout (non-positive keeps it the same).
+// With loop-owned futures (FDR 0022) the loop decides how long to wait on a
+// call, so the client's own timeout becomes a generous ceiling, not the wait.
+func WithToolCallTimeout(d time.Duration) Option {
+	return func(c *Client) {
+		if d > 0 {
+			c.toolTimeout = d
+		}
+	}
+}
+
 // WithMaxResponseBytes sets the response byte cap (non-positive keeps the
 // default).
 func WithMaxResponseBytes(n int64) Option {
@@ -90,9 +102,10 @@ func WithMaxResponseBytes(n int64) Option {
 
 // Client talks to one MCP server. Safe for concurrent use.
 type Client struct {
-	url      string
-	timeout  time.Duration
-	maxBytes int64
+	url         string
+	timeout     time.Duration
+	toolTimeout time.Duration // tools/call only; zero means timeout
+	maxBytes    int64
 
 	mu        sync.Mutex
 	sessionID string
@@ -209,7 +222,11 @@ func (c *Client) Call(ctx context.Context, name string, args json.RawMessage) (j
 		// the request), so it is a tool-level error. A cancelled or expired
 		// run context stays a returned error so the loop ends the run.
 		if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
-			text := fmt.Sprintf("tool call %q exceeded the %s per-call deadline and was abandoned; it may still be running upstream", name, c.timeout)
+			limit := c.timeout
+			if c.toolTimeout > 0 {
+				limit = c.toolTimeout
+			}
+			text := fmt.Sprintf("tool call %q exceeded the %s per-call deadline and was abandoned; it may still be running upstream", name, limit)
 			content, _ := json.Marshal([]map[string]string{{"type": "text", "text": text}})
 			return content, true, nil
 		}
@@ -257,7 +274,11 @@ func (e *rpcError) Error() string {
 // JSON-RPC error envelope, a missing result, an oversized body, or a
 // transport failure is returned as an error.
 func (c *Client) rpc(ctx context.Context, method, params string) (json.RawMessage, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	timeout := c.timeout
+	if method == "tools/call" && c.toolTimeout > 0 {
+		timeout = c.toolTimeout
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	c.mu.Lock()

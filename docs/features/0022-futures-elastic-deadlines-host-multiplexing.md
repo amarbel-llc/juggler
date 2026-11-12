@@ -11,6 +11,12 @@ promotion-criteria: >
 
 # Futures, elastic deadlines and host resource multiplexing for tool calls
 
+> **Rulings (2026-11-12, relayed by the coordinator).** The operator ruled
+> on open question 2: **futures are the default, with a per-tool flag to keep
+> abandon** (built, see *First slice*). The same message accepted the
+> optional `Ledger.Provider` field of FDR 0021 (that record's schema question).
+> Questions 1 and 3-6 are unanswered.
+
 > **Origin and reading.** Operator direction relayed by the coordinator,
 > 2026-11-12: "futures managed by juggler, elastic deadlines, host resource
 > multiplexing. Design note first." The direction is three phrases; the
@@ -116,6 +122,42 @@ do not starve each other:
   per-process broker and gets no cross-run fairness). Whether that is the right
   home is open (*Open questions*, 5).
 
+## First slice (built)
+
+Section 1 only, with the wait as ONE fixed budget; sections 2 and 3 are not
+started.
+
+- `jugglerloop.Config{Futures, CallWait, AbandonTools}` (`future.go`). With
+  `Futures`, a tool-server call runs in a goroutine under the run's context;
+  if it answers within `CallWait` (default 30 s) it is an ordinary call (no
+  `future` in the ledger entry, byte-for-byte as before); otherwise it is
+  parked and the model's tool result is `{"state":"waiting","future":"f-N",
+  "elapsed_ms":…, "note":…}`.
+- Two loop tools, offered only with `Futures`: `future_await {future,
+  timeout_ms?}` and `future_cancel {future}`. They act only on futures this run
+  started (unknown id: an error result, run goes on), are not tool-server calls
+  and are not ledgered. A transport fault found by an await ends the run as
+  `tool_error`, as a synchronous call would.
+- `LedgerCall.Future` (optional, omitempty). The parked call's ledger entry is
+  settled in place (`ok`, `uris`, `error`) when its work ends: at the next
+  loop iteration (`harvest`, which may satisfy `stop_on_pass`), at an await, or
+  at the end of the run, where still-running futures are cancelled (bounded
+  wait) and recorded `cancelled`/`still running when the run ended`.
+  Late-settled calls do not emit a second traffic record.
+- Per-tool abandon: `Config.AbandonTools` / brief `limits.abandon_tools`
+  (each must be in `tools`) cancels the call at `CallWait` and answers an
+  `isError` result (juggler#2's behaviour, now in the loop).
+- Brief: `limits.call_wait` (Go duration, positive) and `limits.abandon_tools`,
+  both optional and omitted from the serialised brief when unset, so existing
+  briefs and digests are unchanged; the brief schema number stays 1.
+- `juggler run` turns `Futures` on for every agent (the ruling). The tool-plane
+  client's own `tools/call` timeout becomes a one-hour backstop
+  (`jugglertools.WithToolCallTimeout`); `initialize` and `tools/list` keep 30 s.
+  The run's wall clock bounds every call.
+- Not yet: delivery of a late completion to the model without an `await`
+  (FDR 0020 events), idle/ceiling deadlines and progress liveness (section 2),
+  the broker (section 3).
+
 ## Examples
 
 A brief that gives a slow, progress-reporting listing room and keeps the rest at
@@ -172,11 +214,11 @@ counted against their `idle`.
    resource multiplexing*: a per-host broker with resource classes and
    load-derived slots. If "elastic" meant only load-based, or "multiplexing"
    meant sharing the llama-server across runs only, §2 and §3 narrow.
-2. **Operator: `waiting` instead of abandon.** juggler#2 chose abandon-and-retry;
-   this record proposes keeping the work and giving the model a handle. Do you
-   want that change (it removes double execution but keeps work running past a
-   deadline the operator may have meant as a cut-off)? A brief flag could keep
-   the abandon behaviour for tools that must not outlive a deadline.
+2. **RESOLVED (operator, 2026-11-12): `waiting` is the default; a per-tool flag
+   keeps abandon.** (Was: juggler#2 chose abandon-and-retry; this record
+   proposed keeping the work and giving the model a handle, at the cost of work
+   running past a deadline the operator may have meant as a cut-off.) Built as
+   `limits.abandon_tools`.
 3. **ringmaster:** is each future a ringmaster job (for `reap`, `exit-wake`,
    handles) or only the async ones FDR 0020 describes? The cost is a journal
    entry per tool call.

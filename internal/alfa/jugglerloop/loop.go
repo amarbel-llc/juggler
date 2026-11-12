@@ -86,6 +86,19 @@ type Config struct {
 	// It is provider-agnostic on purpose: the host wires it from whatever
 	// wraps the HTTP client.
 	StepMeta func() *ProviderMeta
+
+	// Futures turns tool-server calls into loop-owned futures (FDR 0022): a
+	// call that outruns CallWait is parked, not abandoned, and the model is
+	// offered future_await and future_cancel. Off, calls are synchronous as
+	// before.
+	Futures bool
+	// CallWait is how long the loop waits on one call before parking it
+	// (abandoning it, for an AbandonTools tool); DefaultCallWait when zero.
+	CallWait time.Duration
+	// AbandonTools are tools whose call past CallWait is cancelled and
+	// answered as an isError result, juggler#2's behaviour, instead of being
+	// parked. Only meaningful with Futures.
+	AbandonTools map[string]bool
 	// StopWhen, when set, is called with the in-progress ledger (the final
 	// ledger's shape, end reason empty) after each successful tool result; true
 	// ends the run with evaluator_pass. An error is recorded as a ledger note
@@ -118,6 +131,9 @@ type run struct {
 	offered    map[string]struct{}
 	lastTurnID string
 	start      time.Time
+
+	futureSeq int
+	futures   []*future
 }
 
 // Run drives the model's tool-use protocol until the model ends its turn
@@ -146,6 +162,9 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 		start:      start,
 	}
 	tools := toolsWithCannotComplete(cfg.Tools)
+	if cfg.Futures {
+		tools = withFutureTools(tools)
+	}
 	for _, t := range tools {
 		if t.Kind != "" {
 			r.kinds[t.Name] = t.Kind
@@ -157,6 +176,7 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 	if end == EndTimeout && ctx.Err() != nil {
 		runErr = ctx.Err()
 	}
+	r.finishFutures()
 	r.append(TerminalBody(end), r.lastTurnID)
 	r.ledger.End = LedgerEnd{Reason: end}
 	r.ledger.ElapsedMS = cfg.Now().Sub(start).Milliseconds()
@@ -182,6 +202,9 @@ func (c Config) withDefaults() (Config, error) {
 	}
 	if c.MaxSteps <= 0 {
 		c.MaxSteps = DefaultMaxSteps
+	}
+	if c.CallWait <= 0 {
+		c.CallWait = DefaultCallWait
 	}
 	if c.WallClock <= 0 {
 		c.WallClock = DefaultWallClock
@@ -209,6 +232,18 @@ func toolsWithCannotComplete(tools []ToolSpec) []ToolSpec {
 		}
 	}
 	return append(out, CannotCompleteSpec)
+}
+
+// withFutureTools adds the future tools, dropping any same-named tool the
+// brief listed.
+func withFutureTools(tools []ToolSpec) []ToolSpec {
+	out := make([]ToolSpec, 0, len(tools)+2)
+	for _, t := range tools {
+		if t.Name != FutureAwaitTool && t.Name != FutureCancelTool {
+			out = append(out, t)
+		}
+	}
+	return append(out, FutureAwaitSpec, FutureCancelSpec)
 }
 
 func (r *run) append(body Body, parent string) Turn {
@@ -247,6 +282,9 @@ func (r *run) loop(ctx context.Context, tools []ToolSpec) (EndReason, error) {
 		}
 		if r.ledger.Steps >= r.cfg.MaxSteps {
 			return EndStepCap, nil
+		}
+		if end, done := r.harvest(); done {
+			return end, nil
 		}
 
 		r.ledger.Steps++
@@ -348,6 +386,9 @@ func (r *run) execute(ctx context.Context, callTurn Turn) (end EndReason, done b
 		r.ledger.CannotComplete = &CannotComplete{Reason: args.Reason}
 		return EndCannotComplete, true
 	}
+	if r.cfg.Futures && (call.Name == FutureAwaitTool || call.Name == FutureCancelTool) {
+		return r.executeFutureTool(ctx, callTurn)
+	}
 
 	entry := LedgerCall{Tool: call.Name, URIs: []string{}, ArgsDigest: ArgsDigest(call.Args)}
 	if kind, ok := r.kinds[call.Name]; ok {
@@ -381,7 +422,37 @@ func (r *run) execute(ctx context.Context, callTurn Turn) (end EndReason, done b
 		return "", false
 	}
 
+	if r.cfg.Futures {
+		if !r.cfg.AbandonTools[call.Name] {
+			return r.executeAsFuture(ctx, callTurn, entry)
+		}
+		content, isError, err := r.callAbandoning(ctx, call)
+		return r.settle(ctx, callTurn, entry, content, isError, err)
+	}
 	content, isError, err := r.cfg.Exec.Call(ctx, call.Name, call.Args)
+	return r.settle(ctx, callTurn, entry, content, isError, err)
+}
+
+// callAbandoning is the AbandonTools path: the call gets CallWait, and when
+// that elapses (the run itself still live) it is cancelled and answered as an
+// isError result the model can act on, as juggler#2 does inside the client.
+func (r *run) callAbandoning(ctx context.Context, call *ToolCall) (json.RawMessage, bool, error) {
+	callCtx, cancel := context.WithTimeout(ctx, r.cfg.CallWait)
+	defer cancel()
+	content, isError, err := r.cfg.Exec.Call(callCtx, call.Name, call.Args)
+	if err != nil && ctx.Err() == nil && errors.Is(callCtx.Err(), context.DeadlineExceeded) {
+		text, _ := json.Marshal(fmt.Sprintf("tool call %q exceeded the %s call wait and was abandoned; it may still be running upstream", call.Name, r.cfg.CallWait))
+		return text, true, nil
+	}
+	return content, isError, err
+}
+
+// settle records one finished tool-server call: the ledger entry, the
+// tool_result turn and the traffic record, and decides whether the run ends
+// here. A returned err is a transport fault (terminal), isError a tool-level
+// failure the model sees.
+func (r *run) settle(ctx context.Context, callTurn Turn, entry LedgerCall, content json.RawMessage, isError bool, err error) (end EndReason, done bool) {
+	call := callTurn.Body.ToolCall
 	if err != nil {
 		entry.Error = err.Error()
 		r.ledger.Calls = append(r.ledger.Calls, entry)

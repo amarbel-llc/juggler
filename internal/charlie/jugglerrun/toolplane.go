@@ -15,10 +15,16 @@ import (
 	"code.linenisgreat.com/juggler/internal/bravo/jugglertools"
 )
 
+// ToolCallCeiling is the client's own timeout on one tools/call. The loop owns
+// the wait (FDR 0022: limits.call_wait parks or abandons the call), so this is
+// only a backstop; the brief's wall clock is the real bound, since every call
+// runs under the run's context.
+const ToolCallCeiling = time.Hour
+
 // ConnectMoxy initializes the MCP session with the moxy upstream at url and
 // lists its tools; the client itself is the loop's ToolExecutor.
 func ConnectMoxy(ctx context.Context, url string) ([]jugglerloop.ToolSpec, jugglerloop.ToolExecutor, error) {
-	client := jugglertools.New(url)
+	client := jugglertools.New(url, jugglertools.WithToolCallTimeout(ToolCallCeiling))
 	if err := client.Initialize(ctx); err != nil {
 		return nil, nil, fmt.Errorf("moxy upstream %s: %w", url, err)
 	}

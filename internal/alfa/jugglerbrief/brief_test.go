@@ -239,6 +239,37 @@ func TestValidationErrorsNameField(t *testing.T) {
 	}
 }
 
+func TestCallWaitAndAbandonTools(t *testing.T) {
+	// Absent: the loop's defaults apply.
+	b, err := Parse([]byte(issueFilerBrief))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d, err := b.Limits.CallWaitDuration(); err != nil || d != 0 || len(b.Limits.AbandonTools) != 0 {
+		t.Errorf("defaults: call wait = %v, %v, abandon = %v", d, err, b.Limits.AbandonTools)
+	}
+
+	src := strings.Replace(issueFilerBrief, `wall_clock = "2m"`, "wall_clock = \"2m\"\ncall_wait = \"90s\"\nabandon_tools = [\"smith_create_issue\"]", 1)
+	b, err = Parse([]byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d, _ := b.Limits.CallWaitDuration(); d.String() != "1m30s" || len(b.Limits.AbandonTools) != 1 || b.Limits.AbandonTools[0] != "smith_create_issue" {
+		t.Errorf("parsed: call wait = %v, abandon = %v", d, b.Limits.AbandonTools)
+	}
+
+	for name, repl := range map[string]string{
+		"call_wait":      "call_wait = \"soon\"",
+		"call_wait zero": "call_wait = \"0s\"",
+		"abandon_tools":  "abandon_tools = [\"smith_nope\"]",
+	} {
+		bad := strings.Replace(issueFilerBrief, `wall_clock = "2m"`, "wall_clock = \"2m\"\n"+repl, 1)
+		if _, err := Parse([]byte(bad)); err == nil || !strings.Contains(err.Error(), "limits."+strings.Fields(name)[0]) {
+			t.Errorf("%s: err = %v, want a limits.%s error", name, err, strings.Fields(name)[0])
+		}
+	}
+}
+
 func TestEmptyProgramRejected(t *testing.T) {
 	b, err := Parse([]byte(issueFilerBrief))
 	if err != nil {
