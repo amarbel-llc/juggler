@@ -21,10 +21,10 @@ var ErrNotImplemented = errors.New("jugglerprovider: not implemented (FDR 0021 s
 
 // Usage is what a provider reported for one response.
 type Usage struct {
-	PromptTokens     int
-	CompletionTokens int
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
 	// CostUSD is the provider-reported cost when it reports one, else 0.
-	CostUSD float64
+	CostUSD float64 `json:"cost_usd,omitempty"`
 }
 
 // Provider is the adapter the loop's round trip goes through.
@@ -38,9 +38,11 @@ type Provider interface {
 	Prepare(req *http.Request) error
 	// Usage extracts token counts and cost from a response body.
 	Usage(body []byte) (Usage, bool)
-	// Retry classifies a failed round trip: retry after the returned delay
-	// (again == true), or stop.
-	Retry(attempt, status int, body []byte, err error) (after time.Duration, again bool)
+	// Retry classifies a failed round trip (attempt counts from 1): retry
+	// after the returned delay (again == true), or stop. resp is nil when the
+	// round trip itself failed (err != nil); otherwise body is its body and
+	// resp.Header carries e.g. Retry-After.
+	Retry(attempt int, resp *http.Response, body []byte, err error) (after time.Duration, again bool)
 }
 
 // Registry keys of the providers FDR 0021 names.

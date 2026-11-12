@@ -17,8 +17,10 @@ type OpenRouter struct {
 
 var _ Provider = OpenRouter{}
 
-func (OpenRouter) Name() string                                        { return NameOpenRouter }
-func (OpenRouter) Verify(context.Context) error                        { return ErrNotImplemented }
-func (OpenRouter) Prepare(*http.Request) error                         { return ErrNotImplemented }
-func (OpenRouter) Usage([]byte) (Usage, bool)                          { return Usage{}, false }
-func (OpenRouter) Retry(int, int, []byte, error) (time.Duration, bool) { return 0, false }
+func (OpenRouter) Name() string                 { return NameOpenRouter }
+func (OpenRouter) Verify(context.Context) error { return ErrNotImplemented }
+func (OpenRouter) Prepare(*http.Request) error  { return ErrNotImplemented }
+func (OpenRouter) Usage([]byte) (Usage, bool)   { return Usage{}, false }
+func (OpenRouter) Retry(int, *http.Response, []byte, error) (time.Duration, bool) {
+	return 0, false
+}

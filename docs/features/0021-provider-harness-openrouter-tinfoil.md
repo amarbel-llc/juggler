@@ -53,7 +53,7 @@ resolved model, and the loop calls the provider's round trip instead of
         // provider reports them.
         Usage(body []byte) (Usage, bool)
         // Retry classifies a failed round trip: retry after d, or stop.
-        Retry(attempt int, status int, body []byte, err error) (after time.Duration, again bool)
+        Retry(attempt int, resp *http.Response, body []byte, err error) (after time.Duration, again bool)
     }
 
 A provider is selected by a new optional `provider` key on a remote-model
@@ -90,12 +90,17 @@ existing registry changes behaviour). `style` keeps naming the wire shape.
 
 ### 4. Harness policy layer (provider-agnostic)
 
-`jugglerprovider.Do` runs one round trip under the provider: `Verify` once,
-then `Prepare`, send, and on failure `Retry` until the per-step budget (below)
-or the run's wall clock ends it. It returns the reply, a `Usage`, and an
-attempt count that the loop records in the ledger and in the turn
-(`Turn.Provider`: name, attempts, usage), so a post-hoc reader sees what a
-step cost without parsing provider bodies. A retry never re-issues a *tool*
+`jugglerprovider.Transport` is the policy layer, implemented as an
+`http.RoundTripper` so it plugs into the unchanged loop through
+`jugglerloop.Config.HTTPClient` (no loop change, and the layering holds:
+the provider package sits above the loop). Per request it runs `Verify` once
+(a failure sends nothing, ever), then `Prepare`, send, and on failure `Retry`
+until `MaxAttempts` or the run's context ends it, and totals the
+provider-reported `Usage`. `Transport.Stats()` exposes requests, attempts and
+usage. **Working today, against the scripted test double only.** Still
+design: surfacing attempts and usage into the loop's ledger and onto turns
+(`Turn.Provider`: name, attempts, usage), which needs a loop-side hook and is
+the next step; until then a caller reads `Stats()`. A retry never re-issues a *tool*
 call; it repeats the model request only, and a request that reached the
 provider but whose response was lost is retried as a new, idempotent-by-
 construction model request (the transcript is unchanged until a reply is

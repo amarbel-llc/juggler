@@ -21,17 +21,12 @@ func TestForName(t *testing.T) {
 	}
 }
 
-// The stubs must fail closed, never pass verification by accident.
+// The real adapters are still stubs and must fail closed, never pass
+// verification by accident.
 func TestStubsDoNotVerify(t *testing.T) {
 	for _, p := range []Provider{OpenRouter{}, Tinfoil{}} {
 		if err := p.Verify(context.Background()); !errors.Is(err, ErrNotImplemented) {
 			t.Errorf("%s.Verify = %v, want ErrNotImplemented", p.Name(), err)
 		}
-	}
-}
-
-func TestScriptedCodecIsAStub(t *testing.T) {
-	if _, err := (ScriptedCodec{}).DecodeResponse(nil); !errors.Is(err, ErrNotImplemented) {
-		t.Errorf("DecodeResponse = %v", err)
 	}
 }

@@ -25,8 +25,10 @@ type Tinfoil struct {
 
 var _ Provider = Tinfoil{}
 
-func (Tinfoil) Name() string                                        { return NameTinfoil }
-func (Tinfoil) Verify(context.Context) error                        { return ErrNotImplemented }
-func (Tinfoil) Prepare(*http.Request) error                         { return nil }
-func (Tinfoil) Usage([]byte) (Usage, bool)                          { return Usage{}, false }
-func (Tinfoil) Retry(int, int, []byte, error) (time.Duration, bool) { return 0, false }
+func (Tinfoil) Name() string                 { return NameTinfoil }
+func (Tinfoil) Verify(context.Context) error { return ErrNotImplemented }
+func (Tinfoil) Prepare(*http.Request) error  { return nil }
+func (Tinfoil) Usage([]byte) (Usage, bool)   { return Usage{}, false }
+func (Tinfoil) Retry(int, *http.Response, []byte, error) (time.Duration, bool) {
+	return 0, false
+}
