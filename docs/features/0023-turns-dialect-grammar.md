@@ -94,17 +94,22 @@ the node-kind table, outcomes, edges, result steps, the walker.
 
 **Where the library lives (options).**
 
-- **A. A new small module below both** (working name `grammar`): `Pin(raw,
+- **A. A small shared package below both** (working name `grammar`): `Pin(raw,
   wantDigest)`, a strict versioned decoder (`DisallowUnknownFields`, a known
-  version set), `Right(owner, digest)`, and a request-type registry. Both
-  repos import it; neither owns the other's dialect.
+  version set), `Right(owner, digest)`, and a request-type registry. **Ruled
+  (operator, 2026-11-12, Q22): "shared spec first, then a small module below
+  both, but the shared module lives in juggler".** So: the spec first (this
+  section, no code); the module is created in **juggler**, exposed through
+  `pkgs/` as the only importable surface (the facade rule in AGENTS.md), when
+  the turns dialect has a parser; roustabout, which sits above juggler, imports
+  it, so the layering holds. Neither owns the other's dialect.
 - **B. Each repo carries its own copy** with a shared conformance fixture set.
 - **C. juggler imports roustabout's package.** Rejected: roustabout is *above*
   juggler (nothing here may import what sits above it), and its package is
   `internal/`.
 
-Recommendation: **A**, with B as the fallback if a third module is not wanted
-yet. API sketch (names are proposals):
+Ruled: **A**, in juggler (above); B and C are not pursued. API sketch (names
+are proposals; written when the module is created):
 
     package grammar
     func Digest(raw []byte) string                      // "sha256:<hex>"
@@ -172,10 +177,12 @@ unknown-key-rejecting vocabulary. Define it as the **implicit dialect
 ## Shared core (the contract)
 
 > This section is duplicated verbatim in juggler FDR 0023 and in roustabout's
-> `docs/grammar-dialects.md`. **Source of truth for the shared core: roustabout's
-> `internal/0/graph` (`grammar.go`), because it is built and merged; if the
-> shared module of §3 option A is accepted, the module becomes the source and
-> both repos defer to it.** Dialect-specific content is each repo's own.
+> `docs/grammar-dialects.md`. **Source of truth for the shared core: until
+> juggler's shared grammar module exists, the text of this section; once it
+> exists (it is created in juggler when the turns dialect has a parser), that
+> module, and both repos defer to it. roustabout's `internal/0/graph`
+> (`grammar.go`) is the implementation it is drawn from.** Dialect-specific
+> content is each repo's own.
 
 1. **Pin by digest.** The host supplies the grammar document and pins it by its
    sha256 (`sha256:<hex>`). A document never carries the grammar that
@@ -267,17 +274,21 @@ the ceilings is refused.
    documents**, shared pinning and loader machinery, with the runtime records
    mapped (above) rather than grammar-validated. (Was: (a) that, (b) a wire
    schema both layers emit/read, (c) a type system both compile to.)
-2. **Operator: the library home** (§3: A new module, B copies, C rejected).
-   Recommendation A. Cross-repo: roustabout decides what it changes.
+2. **RESOLVED (operator, 2026-11-12, Q22): the shared module lives in juggler**,
+   spec first, created when the turns dialect has a parser; roustabout imports
+   it (§3). The source-of-truth line in the shared-core section changed
+   accordingly and is mirrored byte for byte in roustabout's note.
 3. **Operator / spinclass: who holds the right to pin a dialect?** juggler can
    only check digest equality and record it. Owner: FDR 0032's principal and
    handle machinery; ajour is not an enforcer today.
-4. **Operator: structured terminal result** (an additive `result` on the
-   terminal body). Any change to the on-disk turn format needs a ruling first.
-5. **juggler / roustabout: a run transcript digest.** Where the transcript lives
-   and whether a `transcript_digest` can be cheaply written at finish.
-6. **Operator: per-step tool offering.** The only new capability. Build it, or
-   keep dialects to the envelope (§5) and leave per-step offering out?
+4. **ACCEPTED (operator, 2026-11-12, Q23): structured terminal `result`**, an
+   additive optional field on the terminal body, schema stays 1. Being built,
+   tests first; existing transcripts serialise unchanged.
+5. **ACCEPTED (operator, 2026-11-12, Q23): a run transcript digest**, additive,
+   schema stays 1. Being built.
+6. **DEFERRED (operator, 2026-11-12, Q24): per-step tool offering is NOT built
+   yet**; the dialect (the pinned, versioned document and its envelope) comes
+   first. Recorded here as deferred; §2 keeps it as the one new capability.
 7. **Numbering.** juggler's FDR 0023 and roustabout's file carry the shared slug
    `grammar-dialects`; others' records are not renumbered.
 
