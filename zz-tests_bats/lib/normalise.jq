@@ -1,5 +1,5 @@
-# Shape-preserving normalisation of one recorded case's text (FDR-free; see
-# NORMALISE, written beside the captured cases).
+# Shape-preserving normalisation of one recorded case's text. Copied verbatim as
+# NORMALISE beside the captured cases, so the rules travel with the data.
 #
 # Run as: jq -Rsj --arg all "$ALL" --arg root "$WORLD" -f normalise.jq FILE
 # where FILE is slurped as one raw string (-Rs, written with -j so no byte is

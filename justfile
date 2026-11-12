@@ -191,6 +191,24 @@ debug-sync-contract src commit:
       >zz-tests_bats/contract/roustabout-adapter.source
     cat zz-tests_bats/contract/roustabout-adapter.source
 
+# Builds packages.adapter-cases (the real juggler binary over the recorded adapter
+# scenarios, normalised; zz-tests_bats/capture.bash) and copies it to DEST, which
+# must not exist yet. Roustabout commits the result as its adapter testdata and
+# adds COMMIT and README; juggler only captures. Deterministic: two builds of the
+# same tree give the same cases (the bats lane pins this).
+#
+# copy the recorded adapter cases out of the store
+[group('debug')]
+debug-copy-adapter-cases dest:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [ ! -e "{{ dest }}" ] || { echo "{{ dest }} exists" >&2; exit 1; }
+    system=$(nix eval --raw --impure --expr 'builtins.currentSystem')
+    out=$(nix build ".#packages.${system}.adapter-cases" --no-link --print-out-paths --print-build-logs)
+    mkdir -p "{{ dest }}"
+    cp -r --no-preserve=mode "$out"/. "{{ dest }}"/
+    ls "{{ dest }}"
+
 # One-shot after the NATO relayout: comments, man pages and the FDR named
 # packages as internal/<leaf>; levels move, so name them internal/*/<leaf> (the
 # dagnabit(7) convention). Skips pkgs/ (generated; regenerate it with `just

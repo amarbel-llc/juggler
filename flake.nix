@@ -484,6 +484,26 @@
           # merge time (see ./sweatfile).
           conformist-repair = eval.config.build.repair;
           conformist-impure-config = impureEval.config.build.configFile;
+
+          # The recorded adapter cases (<case>/{args,stdout,rc,stderr} plus
+          # NORMALISE): the real juggler binary driven through the scenarios
+          # of zz-tests_bats/lib/adapter.bash in fresh fake-platform worlds,
+          # normalised. Roustabout copies them out as its adapter testdata
+          # (`just debug-copy-adapter-cases`). Build-only; no new flake input.
+          adapter-cases =
+            pkgs.runCommand "juggler-adapter-cases"
+              {
+                nativeBuildInputs = [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.jq
+                ];
+                JUGGLER_BIN = "${juggler-go}/bin/juggler";
+                FAKE_PLATFORM_BIN = "${fake-platform-go}/bin/fake-platform";
+              }
+              ''
+                bash ${./zz-tests_bats}/capture.bash $out
+              '';
         }
         // batsLaneOutputs
         # The -race variant of the test lane, under packages (`just test-go-race`).
