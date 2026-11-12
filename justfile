@@ -17,7 +17,7 @@ build-juggler:
 
 # --- test ---
 
-test: test-go test-bats
+test: test-go test-go-race test-bats
 
 # godyn's per-package go test lane (checks.tests = passthru.checkAll of the
 # juggler build): each tested package's test binary is built and run in its
@@ -152,14 +152,10 @@ debug-plan-layout:
 
 # The per-package lane under -race (a race-instrumented stdlib and -race on every
 # compile and link), so a detected data race fails the run. Godyn systems only
-# (packages.juggler-godyn-race-tests). Opt-in, outside `just test` (as in clown),
-# and currently RED: 5 tests in internal/charlie/jugglerrun die with "ringmaster
-# ...: signal: killed" from the fake ringmaster, deterministically, with no data
-# race reported. Cause not yet found; this is the repro.
+# (packages.juggler-godyn-race-tests); part of `just test` (juggler#1).
 #
-# run the Go unit tests per package under -race (currently failing)
-[group('debug')]
-debug-test-go-race:
+# run the Go unit tests per package under -race
+test-go-race:
     nix build '.#juggler-godyn-race-tests' --no-link --print-build-logs
 
 # Runs godyn-go against a scratch copy of go.nix (-m) so the real manifest cannot

@@ -75,7 +75,11 @@ func Install(t testing.TB) *Fakes {
 	f := &Fakes{Dir: dir}
 	for tool, dst := range map[string]*string{"ringmaster": &f.Ringmaster, "troupe": &f.Troupe, "systemd-run": &f.SystemdRun, "moxy": &f.Moxy, "systemctl": &f.Systemctl} {
 		path := filepath.Join(dir, "bin", tool)
-		script := fmt.Sprintf("#!/bin/sh\n%s=%s %s=%s exec %s \"$@\"\n", toolEnv, shQuote(tool), dirEnv, shQuote(dir), shQuote(self))
+		// GORACE: a -race binary sleeps atexit_sleep_ms (default 1s) before
+		// every exit, which would make each fake call take 1 s and outlast the
+		// tests' short deadlines. A real exit-time race report is not needed
+		// from a fake. Ignored by a non-race binary.
+		script := fmt.Sprintf("#!/bin/sh\nGORACE=\"atexit_sleep_ms=0 ${GORACE:-}\" %s=%s %s=%s exec %s \"$@\"\n", toolEnv, shQuote(tool), dirEnv, shQuote(dir), shQuote(self))
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 			t.Fatal(err)
 		}

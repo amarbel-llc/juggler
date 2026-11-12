@@ -38,12 +38,10 @@ test-bats` the sandboxed bats lane. Go tools that need a module (dagnabit,
 `git diff go.nix` after a run is a dependency signal, not noise. To preview a
 resolution without touching it, `just debug-godyn-go-scratch`.
 
-`just debug-test-go-race` is the `-race` lane (godyn systems). It is opt-in and
-currently red: 5 tests in `internal/charlie/jugglerrun` (parent-cancel, SIGTERM
-past the deadline, the three ExitWake done/read retries) die with `ringmaster
-...: signal: killed` from the fake ringmaster (an `sh` script that re-execs the
-race-instrumented test binary); no data race is reported and the cause is not
-yet found.
+`just test-go-race` is the `-race` lane (godyn systems), part of `just test`.
+The fakes in `internal/0/jugglerruntest` re-exec the test binary, and a `-race`
+binary sleeps `atexit_sleep_ms` (1 s) before every exit; the fake wrapper sets
+`GORACE=atexit_sleep_ms=0` so short test deadlines do not SIGKILL it (juggler#1).
 
 ## Boundaries
 
