@@ -643,6 +643,24 @@ func TestWaitChild(t *testing.T) {
 			t.Fatalf("wait = %+v, err = %v", w2, err)
 		}
 	})
+	t.Run("a null result is present, not absent", func(t *testing.T) {
+		nul := jugglerloop.Ledger{
+			Schema: 1, Calls: []jugglerloop.LedgerCall{},
+			End: jugglerloop.LedgerEnd{Reason: jugglerloop.EndTurn, Result: json.RawMessage(`null`)},
+		}
+		h := newHarness(t)
+		pinPrincipals(h, testRoot, "child-1")
+		newRun(t, h, "rec-42")
+		rec := spawnChild(t, h)
+		finishAgent(t, h, rec, StateSucceeded, "evaluator passed", nul)
+		w, err := WaitChild(context.Background(), h.deps, rec, time.Second, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if b, _ := json.Marshal(w); string(w.Result) != "null" || !strings.Contains(string(b), `"result":null`) {
+			t.Errorf("wait = %s (result %q), want the result key present with null", b, w.Result)
+		}
+	})
 	t.Run("no result keys without an opt-in", func(t *testing.T) {
 		h := newHarness(t)
 		pinPrincipals(h, testRoot, "child-1")

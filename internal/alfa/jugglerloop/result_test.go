@@ -44,6 +44,27 @@ func TestResult_JSONFinalMessageIsCarried(t *testing.T) {
 	}
 }
 
+// A JSON null is a result, not an absent one: consumers (roustabout) keep
+// "key present" apart from "key absent", so null must survive the terminal
+// turn, the ledger and a read-back of the ledger.
+func TestResult_JSONNullIsAResultNotAbsent(t *testing.T) {
+	res := runWithFinal(t, ResultFormatJSON, "null")
+	if got := terminalOf(res); string(got.Result) != "null" || got.ResultError != "" {
+		t.Fatalf("terminal = %+v, want result null", got)
+	}
+	doc, _ := json.Marshal(res.Ledger)
+	if !strings.Contains(string(doc), `"result":null`) {
+		t.Fatalf("ledger = %s, want the key present with null", doc)
+	}
+	var back Ledger
+	if err := json.Unmarshal(doc, &back); err != nil {
+		t.Fatal(err)
+	}
+	if string(back.End.Result) != "null" {
+		t.Errorf("read back result = %q, want null kept as a value", back.End.Result)
+	}
+}
+
 func TestResult_UnusableFinalMessageSaysWhy(t *testing.T) {
 	for name, content := range map[string]string{
 		"not json":      "I filed the issue.",

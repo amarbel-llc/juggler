@@ -292,7 +292,14 @@ the ceilings is refused.
    prints `result` (and `result_error`, `transcript_digest`) from the ledger,
    re-compacted, under those exact keys, absent when the ledger has none. A
    failed agent (`state` not `succeeded`) can still carry a `result`: the
-   evaluator decides success. The code was written before its
+   evaluator decides success. A JSON `null` final message is a result (the key
+   is present with `null`), kept apart from an absent key; tested through the
+   terminal turn, the ledger and `spawn --wait`. **Consumer note (roustabout,
+   2fdf252):** the opt-in lives in the brief, so a forgotten `[result] format =
+   "json"` surfaces to a graph as an agent failure ("the run carries no
+   result"), not at load; whether the first live runs make that too easy to
+   forget is a signal to watch, and a dialect that requires it would catch it
+   at pin time. The code was written before its
    tests (the ruling asked for tests first).
 5. **ACCEPTED and BUILT (operator, 2026-11-12, Q23): a run transcript digest**,
    additive, schema stays 1. Shape: `ledger.transcript_digest` =
