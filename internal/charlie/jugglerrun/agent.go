@@ -383,6 +383,7 @@ func RunAgent(ctx context.Context, deps AgentDeps, req AgentRequest) (AgentOutco
 		abandon[name] = true
 	}
 	res, runErr := jugglerloop.Run(runCtx, jugglerloop.Config{
+		ResultFormat: b.ResultFormat(),
 		Futures:      true,
 		CallWait:     callWait,
 		AbandonTools: abandon,

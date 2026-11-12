@@ -275,6 +275,24 @@ the ledger also carries an optional
 object (requests, HTTP attempts, token and cost totals as the provider reported them) and the first turn of each model reply a
 .Ql provider
 account of its own request; both are absent otherwise.
+A brief that opts in with
+.Ql [result] format = "json"
+gets a structured result: when the run ends
+.Ql end_turn ,
+the final model message must be exactly one JSON value, which is carried
+compacted as
+.Ql result
+on the terminal turn's body and as
+.Ql end.result
+in the ledger (so an evaluator can read
+.Ql .end.result ) .
+A final message that is empty, not JSON, followed by other text, or over 64 KiB
+yields no
+.Ql result
+and a
+.Ql result_error
+saying why, on both; it does not change how the run ended.
+A run that does not opt in, or ends any other way, carries neither field.
 A call's URIs come from the MCP result's
 .Ql structuredContent
 first, then from its content blocks.

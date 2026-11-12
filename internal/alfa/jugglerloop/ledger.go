@@ -82,6 +82,12 @@ type LedgerCall struct {
 
 type LedgerEnd struct {
 	Reason EndReason `json:"reason"`
+	// Result and ResultError mirror the terminal turn's (see Terminal): the
+	// run's structured result, or why there is none. Absent unless the run
+	// opted in, so an evaluator (`.end.result`) and a consumer reading the
+	// ledger get the same value the transcript carries.
+	Result      json.RawMessage `json:"result,omitempty"`
+	ResultError string          `json:"result_error,omitempty"`
 }
 
 type CannotComplete struct {

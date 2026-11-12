@@ -67,6 +67,17 @@ type Brief struct {
 
 	Evaluator Evaluator `toml:"evaluator"`
 	Limits    Limits    `toml:"limits"`
+
+	// Result opts the run in to a structured terminal result (FDR 0023): the
+	// final model message must be one JSON value, carried on the terminal turn
+	// and the ledger's end. Absent (nil) means no structured result.
+	Result *ResultSpec `toml:"result,omitempty"`
+}
+
+// ResultSpec is the brief's [result] table.
+type ResultSpec struct {
+	// Format is the result format; only "json" is defined.
+	Format string `toml:"format"`
 }
 
 // TemplateFields are the fields a brief template may leave empty: the
@@ -349,7 +360,19 @@ func (b *Brief) validate(template bool) error {
 			return fmt.Errorf("jugglerbrief: limits.abandon_tools: %q is not in tools", name)
 		}
 	}
+	if b.Result != nil && b.Result.Format != "json" {
+		return fmt.Errorf("jugglerbrief: result.format: %q is not defined (only %q)", b.Result.Format, "json")
+	}
 	return nil
+}
+
+// ResultFormat is the brief's structured-result format, "" when it did not
+// opt in.
+func (b *Brief) ResultFormat() string {
+	if b.Result == nil {
+		return ""
+	}
+	return b.Result.Format
 }
 
 // reservedMetaTools are moxy's own builtin meta tools: no owning server, so

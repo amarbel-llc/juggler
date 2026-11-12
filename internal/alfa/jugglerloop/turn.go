@@ -91,6 +91,13 @@ type ToolResult struct {
 // turn.
 type Terminal struct {
 	Reason EndReason `json:"reason"`
+	// Result is the run's structured result: the one JSON value of the final
+	// model message, set only when the run opted in (Config.ResultFormat) and
+	// ended end_turn with a valid value. ResultError says why there is none
+	// when it opted in and the final message was unusable. Both are absent for
+	// a run that did not opt in, so such transcripts serialise as before.
+	Result      json.RawMessage `json:"result,omitempty"`
+	ResultError string          `json:"result_error,omitempty"`
 }
 
 func TextBody(text string) Body { return Body{Type: BodyText, Text: text} }
@@ -101,6 +108,12 @@ func ToolResultBody(r ToolResult) Body { return Body{Type: BodyToolResult, ToolR
 
 func TerminalBody(reason EndReason) Body {
 	return Body{Type: BodyTerminal, Terminal: &Terminal{Reason: reason}}
+}
+
+// terminalBodyWithResult is TerminalBody plus the structured result (or why
+// there is none).
+func terminalBodyWithResult(reason EndReason, result json.RawMessage, resultErr string) Body {
+	return Body{Type: BodyTerminal, Terminal: &Terminal{Reason: reason, Result: result, ResultError: resultErr}}
 }
 
 // NewRandomTurnID returns a 128-bit random hex id, the default turn id

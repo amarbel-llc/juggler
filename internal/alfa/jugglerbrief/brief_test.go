@@ -270,6 +270,20 @@ func TestCallWaitAndAbandonTools(t *testing.T) {
 	}
 }
 
+func TestResultFormat(t *testing.T) {
+	b, err := Parse([]byte(issueFilerBrief))
+	if err != nil || b.Result != nil || b.ResultFormat() != "" {
+		t.Fatalf("absent: result = %+v, err = %v", b.Result, err)
+	}
+	b, err = Parse([]byte(issueFilerBrief + "\n[result]\nformat = \"json\"\n"))
+	if err != nil || b.ResultFormat() != "json" {
+		t.Fatalf("json: format = %q, err = %v", b.ResultFormat(), err)
+	}
+	if _, err := Parse([]byte(issueFilerBrief + "\n[result]\nformat = \"xml\"\n")); err == nil || !strings.Contains(err.Error(), "result.format") {
+		t.Errorf("xml: err = %v, want a result.format error", err)
+	}
+}
+
 func TestEmptyProgramRejected(t *testing.T) {
 	b, err := Parse([]byte(issueFilerBrief))
 	if err != nil {

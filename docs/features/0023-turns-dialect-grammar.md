@@ -214,19 +214,17 @@ two layers exchange. The mapping, from the code:
 | **Future handle** | a `tool_result` whose content is `{"state":"waiting","future":"f-N",...}` (FDR 0022) | loop | per tool call, not per run |
 | **Ledger** | `{schema, calls[], end, cannot_complete, steps, elapsed_ms, notes?, provider?}` | loop | the evaluator's input; `calls[]` = `{tool, kind, ok, uris, error?, args_digest, future?}` |
 | **ProviderMeta** | `{name, attempts, prompt_tokens, completion_tokens, cost_usd}` | provider harness (FDR 0021) | on the first turn of a reply and totalled in `Ledger.provider` |
-| **Terminal** | `{reason}` | loop | only the end reason today (see below) |
+| **Terminal** | `{reason, result?, result_error?}` | loop | `result`/`result_error` only when the brief opts in (`[result] format = "json"`) and the run ended `end_turn`; mirrored in `ledger.end` |
 
 These are additive optional fields on a schema-1 wire shape (ledger and turn
 fields the operator accepted for `provider`; `future` follows the same rule).
 
 ## What roustabout asked of turns
 
-- *The terminal body of a run as a structured result.* The terminal turn today
-  carries only the end reason; the model's final text is the last `text` turn
-  and roustabout parses findings out of the `message` string. Option: an
-  optional `result` on the terminal body, taken from the last model reply when a
-  dialect says `result = "json"`. This changes the on-disk turn format (additive),
-  so it is a numbered question, not built (*Open questions*, 4).
+- *The terminal body of a run as a structured result.* Built (*Open questions*,
+  4): an optional `result` on the terminal body and `end.result` in the ledger,
+  opt-in by the brief's `[result] format = "json"`. roustabout no longer has to
+  parse findings out of the `message` string.
 - *Per-call ledger fields (tool, kind, ok, uris).* Exist and are stable
   (`LedgerCall`, plus optional `future`, `args_digest`).
 - *A stable handle or digest for a run's turn log.* FDR 0022 handles are
@@ -281,9 +279,16 @@ the ceilings is refused.
 3. **Operator / spinclass: who holds the right to pin a dialect?** juggler can
    only check digest equality and record it. Owner: FDR 0032's principal and
    handle machinery; ajour is not an enforcer today.
-4. **ACCEPTED (operator, 2026-11-12, Q23): structured terminal `result`**, an
-   additive optional field on the terminal body, schema stays 1. Being built,
-   tests first; existing transcripts serialise unchanged.
+4. **ACCEPTED and BUILT (operator, 2026-11-12, Q23): structured terminal
+   `result`**, an additive optional field on the terminal body, schema stays 1.
+   Shape: brief `[result] format = "json"` (the only format); on an `end_turn`
+   run the final model message must be exactly one JSON value (leading and
+   trailing whitespace allowed, nothing else, at most 64 KiB), carried compacted
+   as `terminal.result` on the terminal turn and as `end.result` in the ledger;
+   otherwise `result_error` (a sentence) on both and no `result`. A run that did
+   not opt in, or ended another way, carries neither field; existing
+   transcripts and ledgers serialise unchanged. The code was written before its
+   tests (the ruling asked for tests first).
 5. **ACCEPTED (operator, 2026-11-12, Q23): a run transcript digest**, additive,
    schema stays 1. Being built.
 6. **DEFERRED (operator, 2026-11-12, Q24): per-step tool offering is NOT built

@@ -1,11 +1,14 @@
 package jugglerloop
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	rm "code.linenisgreat.com/juggler/internal/0/juggler"
@@ -87,6 +90,13 @@ type Config struct {
 	// wraps the HTTP client.
 	StepMeta func() *ProviderMeta
 
+	// ResultFormat opts the run in to a structured result (ResultFormatJSON):
+	// when it ends end_turn, the final model message must be one JSON value,
+	// which becomes Terminal.Result and Ledger.End.Result; otherwise
+	// ResultError says why not. Empty means no structured result (the
+	// default; nothing changes).
+	ResultFormat string
+
 	// Futures turns tool-server calls into loop-owned futures (FDR 0022): a
 	// call that outruns CallWait is parked, not abandoned, and the model is
 	// offered future_await and future_cancel. Off, calls are synchronous as
@@ -134,6 +144,10 @@ type run struct {
 
 	futureSeq int
 	futures   []*future
+
+	// finalText is the text of the model reply that ended the run with
+	// end_turn (the source of the structured result).
+	finalText string
 }
 
 // Run drives the model's tool-use protocol until the model ends its turn
@@ -177,8 +191,9 @@ func Run(ctx context.Context, cfg Config) (Result, error) {
 		runErr = ctx.Err()
 	}
 	r.finishFutures()
-	r.append(TerminalBody(end), r.lastTurnID)
-	r.ledger.End = LedgerEnd{Reason: end}
+	result, resultErr := r.terminalResult(end)
+	r.append(terminalBodyWithResult(end, result, resultErr), r.lastTurnID)
+	r.ledger.End = LedgerEnd{Reason: end, Result: result, ResultError: resultErr}
 	r.ledger.ElapsedMS = cfg.Now().Sub(start).Milliseconds()
 	return Result{Transcript: r.transcript, Ledger: r.ledger, End: end}, runErr
 }
@@ -232,6 +247,43 @@ func toolsWithCannotComplete(tools []ToolSpec) []ToolSpec {
 		}
 	}
 	return append(out, CannotCompleteSpec)
+}
+
+// ResultFormatJSON is the one structured-result format: the final model
+// message is a single JSON value.
+const ResultFormatJSON = "json"
+
+// MaxResultBytes caps a structured result: the ledger is the evaluator's input
+// and must not grow with a model's long final message.
+const MaxResultBytes = 64 << 10
+
+// terminalResult extracts the structured result when the run opted in and
+// ended end_turn. It returns the compact JSON value, or a reason there is none.
+// A run that did not opt in, or ended any other way, returns nothing.
+func (r *run) terminalResult(end EndReason) (json.RawMessage, string) {
+	if r.cfg.ResultFormat != ResultFormatJSON || end != EndTurn {
+		return nil, ""
+	}
+	text := strings.TrimSpace(r.finalText)
+	if text == "" {
+		return nil, "the final message is empty"
+	}
+	if len(text) > MaxResultBytes {
+		return nil, fmt.Sprintf("the final message is %d bytes, over the %d-byte result cap", len(text), MaxResultBytes)
+	}
+	dec := json.NewDecoder(strings.NewReader(text))
+	var v json.RawMessage
+	if err := dec.Decode(&v); err != nil {
+		return nil, "the final message is not valid JSON: " + err.Error()
+	}
+	if _, err := dec.Token(); err != io.EOF {
+		return nil, "the final message has text after its JSON value"
+	}
+	var compact bytes.Buffer
+	if err := json.Compact(&compact, v); err != nil {
+		return nil, "the final message is not valid JSON: " + err.Error()
+	}
+	return json.RawMessage(compact.Bytes()), ""
 }
 
 // withFutureTools adds the future tools, dropping any same-named tool the
@@ -319,6 +371,13 @@ func (r *run) loop(ctx context.Context, tools []ToolSpec) (EndReason, error) {
 				// Cut off by the provider's token limit: not a finished answer.
 				return EndMaxTokens, nil
 			}
+			var texts []string
+			for _, t := range reply.Turns {
+				if t.Body.Type == BodyText {
+					texts = append(texts, t.Body.Text)
+				}
+			}
+			r.finalText = strings.Join(texts, "\n")
 			return EndTurn, nil
 		}
 
